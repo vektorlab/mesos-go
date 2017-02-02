@@ -14,7 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mesos.executor;
+
+package mesos.v1.executor;
 
 import "github.com/mesos/mesos-go/mesos.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
@@ -46,21 +47,37 @@ message Event {
   // Possible event types, followed by message definitions if
   // applicable.
   enum Type {
+    // This must be the first enum value in this list, to
+    // ensure that if 'type' is not set, the default value
+    // is UNKNOWN. This enables enum values to be added
+    // in a backwards-compatible way. See: MESOS-4997.
+    UNKNOWN = 0;
+
     SUBSCRIBED = 1;   // See 'Subscribed' below.
     LAUNCH = 2;       // See 'Launch' below.
+    LAUNCH_GROUP = 8; // See 'LaunchGroup' below.
     KILL = 3;         // See 'Kill' below.
     ACKNOWLEDGED = 4; // See 'Acknowledged' below.
     MESSAGE = 5;      // See 'Message' below.
     ERROR = 6;        // See 'Error' below.
 
-    // Received when the agent asks the executor to shutdown/kill itself. The
-    // executor is then required to kill all its active tasks, send
-    // 'TASK_KILLED' status updates and gracefully exit. If an
-    // executor does not terminate within a certain period
-    // `MESOS_EXECUTOR_SHUTDOWN_GRACE_PERIOD` (an environment variable set by
-    // the agent upon executor startup), the agent  will forcefully destroy the
+    // Received when the agent asks the executor to shutdown/kill itself.
+    // The executor is then required to kill all its active tasks, send
+    // `TASK_KILLED` status updates and gracefully exit. The executor
+    // should terminate within a `MESOS_EXECUTOR_SHUTDOWN_GRACE_PERIOD`
+    // (an environment variable set by the agent upon executor startup);
+    // it can be configured via `ExecutorInfo.shutdown_grace_period`. If
+    // the executor fails to do so, the agent will forcefully destroy the
     // container where the executor is running. The agent would then send
-    // 'TASK_LOST' updates for any remaining active tasks of this executor.
+    // `TASK_LOST` updates for any remaining active tasks of this executor.
+    //
+    // NOTE: The executor must not assume that it will always be allotted
+    // the full grace period, as the agent may decide to allot a shorter
+    // period and failures / forcible terminations may occur.
+    //
+    // TODO(alexr): Consider adding a duration field into the `Shutdown`
+    // message so that the agent can communicate when a shorter period
+    // has been allotted.
     SHUTDOWN = 7;
 
     option (gogoproto.goproto_enum_prefix) = true;
@@ -72,6 +89,9 @@ message Event {
     required ExecutorInfo executor_info = 1 [(gogoproto.nullable) = false];
     required FrameworkInfo framework_info = 2 [(gogoproto.nullable) = false];
     required AgentInfo agent_info = 3 [(gogoproto.nullable) = false];
+
+    // Uniquely identifies the container of an executor run.
+    optional ContainerID container_id = 4;
   }
 
   // Received when the framework attempts to launch a task. Once
@@ -81,12 +101,24 @@ message Event {
     required TaskInfo task = 1 [(gogoproto.nullable) = false];
   }
 
+  // Received when the framework attempts to launch a group of tasks atomically.
+  // Similar to `Launch` above the executor must send TASK_RUNNING updates for
+  // tasks that are successfully launched.
+  message LaunchGroup {
+    required TaskGroupInfo task_group = 1;
+  }
+
   // Received when the scheduler wants to kill a specific task. Once
   // the task is terminated, the executor should send a TASK_KILLED
   // (or TASK_FAILED) update. The terminal update is necessary so
   // Mesos can release the resources associated with the task.
   message Kill {
     required TaskID task_id = 1 [(gogoproto.nullable) = false, (gogoproto.customname) = "TaskID"];
+
+    // If set, overrides any previously specified kill policy for this task.
+    // This includes 'TaskInfo.kill_policy' and 'Executor.kill.kill_policy'.
+    // Can be used to forcefully kill a task which is already being killed.
+    optional KillPolicy kill_policy = 2;
   }
 
   // Received when the agent acknowledges the receipt of status
@@ -120,11 +152,13 @@ message Event {
 
   // Type of the event, indicates which optional field below should be
   // present if that type has a nested message definition.
-  required Type type = 1;
+  // Enum fields should be optional, see: MESOS-4997.
+  optional Type type = 1;
 
   optional Subscribed subscribed = 2;
   optional Acknowledged acknowledged = 3;
   optional Launch launch = 4;
+  optional LaunchGroup launch_group = 8;
   optional Kill kill = 5;
   optional Message message = 6;
   optional Error error = 7;
@@ -141,10 +175,12 @@ message Event {
   // Possible call types, followed by message definitions if
   // applicable.
   enum Type {
+    // See comments above on `Event::Type` for more details on this enum value.
+    UNKNOWN = 0;
+
     SUBSCRIBE = 1;    // See 'Subscribe' below.
     UPDATE = 2;       // See 'Update' below.
     MESSAGE = 3;      // See 'Message' below.
-
     option (gogoproto.goproto_enum_prefix) = true;
   }
 
@@ -179,12 +215,15 @@ message Event {
 
   // Identifies the executor which generated this call.
   required ExecutorID executor_id = 1 [(gogoproto.nullable) = false, (gogoproto.customname) = "ExecutorID"];
+
   required FrameworkID framework_id = 2 [(gogoproto.nullable) = false, (gogoproto.customname) = "FrameworkID"];
 
   // Type of the call, indicates which optional field below should be
   // present if that type has a nested message definition.
   // In case type is SUBSCRIBED, no message needs to be set.
-  required Type type = 3;
+  // See comments on `Event::Type` above on the reasoning behind this
+  // field being optional.
+  optional Type type = 3;
 
   optional Subscribe subscribe = 4;
   optional Update update = 5;

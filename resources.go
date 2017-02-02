@@ -9,7 +9,7 @@ import (
 )
 
 type (
-	Role              string
+	//Role              string
 	Resources         []Resource
 	ResourceFilter    func(*Resource) bool
 	ResourceFilters   []ResourceFilter
@@ -25,13 +25,13 @@ type (
 	FlattenOpt func(*FlattenConfig)
 
 	FlattenConfig struct {
-		Role        string
+		Role        *Role
 		Reservation *Resource_ReservationInfo
 	}
 )
 
 const (
-	RoleDefault = Role("*")
+	RoleDefaultName = "*"
 
 	ResourceErrorTypeIllegalName ResourceErrorType = iota
 	ResourceErrorTypeIllegalType
@@ -104,18 +104,17 @@ func (err *ResourceError) Error() string {
 }
 
 func (r Role) IsDefault() bool {
-	return r == RoleDefault
+	return r.Name == RoleDefaultName
 }
 
 func (r Role) Assign() FlattenOpt {
 	return func(fc *FlattenConfig) {
-		fc.Role = string(r)
+		fc.Role = &r
 	}
 }
 
 func (r Role) Proto() *string {
-	s := string(r)
-	return &s
+	return &r.Name
 }
 
 func (rf ResourceFilter) Or(f ResourceFilter) ResourceFilter {
@@ -304,7 +303,7 @@ func (resources Resources) find(target Resource) Resources {
 			if flattened.ContainsAll(remaining) {
 				// target has been found, return the result
 				return found.Add(remaining.Flatten(
-					Role(filtered[i].GetRole()).Assign(),
+					Role{Name: filtered[i].GetRole()}.Assign(),
 					filtered[i].Reservation.Assign())...)
 			}
 			if remaining.ContainsAll(flattened) {
@@ -329,12 +328,12 @@ func (resources Resources) Flatten(opts ...FlattenOpt) (flattened Resources) {
 	for _, f := range opts {
 		f(fc)
 	}
-	if fc.Role == "" {
-		fc.Role = string(RoleDefault)
+	if fc.Role == nil {
+		fc.Role = &Role{Name: RoleDefaultName}
 	}
 	// we intentionally manipulate a copy 'r' of the item in resources
 	for _, r := range resources {
-		r.Role = &fc.Role
+		r.Role = fc.Role.Proto()
 		r.Reservation = fc.Reservation
 		flattened.add(r)
 	}
@@ -640,7 +639,7 @@ func (left *Resource) Validate() error {
 	}
 
 	// check for invalid state of (role,reservation) pair
-	if left.GetRole() == string(RoleDefault) && left.GetReservation() != nil {
+	if left.GetRole() == RoleDefaultName && left.GetReservation() != nil {
 		return ResourceErrorTypeIllegalReservation.Generate("default role cannot be dynamically assigned")
 	}
 
@@ -838,7 +837,7 @@ func (left *Resource) IsUnreserved() bool {
 	// role != RoleDefault     -> static reservation
 	// GetReservation() != nil -> dynamic reservation
 	// return {no-static-reservation} && {no-dynamic-reservation}
-	return left.GetRole() == string(RoleDefault) && left.GetReservation() == nil
+	return left.GetRole() == RoleDefaultName && left.GetReservation() == nil
 }
 
 // IsReserved returns true if this resource has been reserved for the given role.
