@@ -1356,6 +1356,21 @@ func (mj *Event) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			buf.WriteByte(',')
 		}
 	}
+	if mj.LaunchGroup != nil {
+		if true {
+			buf.WriteString(`"launch_group":`)
+
+			{
+
+				err = mj.LaunchGroup.MarshalJSONBuf(buf)
+				if err != nil {
+					return err
+				}
+
+			}
+			buf.WriteByte(',')
+		}
+	}
 	if mj.Kill != nil {
 		if true {
 			buf.WriteString(`"kill":`)
@@ -1418,6 +1433,8 @@ const (
 
 	ffj_t_Event_Launch
 
+	ffj_t_Event_LaunchGroup
+
 	ffj_t_Event_Kill
 
 	ffj_t_Event_Message
@@ -1432,6 +1449,8 @@ var ffj_key_Event_Subscribed = []byte("subscribed")
 var ffj_key_Event_Acknowledged = []byte("acknowledged")
 
 var ffj_key_Event_Launch = []byte("launch")
+
+var ffj_key_Event_LaunchGroup = []byte("launch_group")
 
 var ffj_key_Event_Kill = []byte("kill")
 
@@ -1528,6 +1547,11 @@ mainparse:
 						currentKey = ffj_t_Event_Launch
 						state = fflib.FFParse_want_colon
 						goto mainparse
+
+					} else if bytes.Equal(ffj_key_Event_LaunchGroup, kn) {
+						currentKey = ffj_t_Event_LaunchGroup
+						state = fflib.FFParse_want_colon
+						goto mainparse
 					}
 
 				case 'm':
@@ -1570,6 +1594,12 @@ mainparse:
 
 				if fflib.EqualFoldRight(ffj_key_Event_Kill, kn) {
 					currentKey = ffj_t_Event_Kill
+					state = fflib.FFParse_want_colon
+					goto mainparse
+				}
+
+				if fflib.AsciiEqualFold(ffj_key_Event_LaunchGroup, kn) {
+					currentKey = ffj_t_Event_LaunchGroup
 					state = fflib.FFParse_want_colon
 					goto mainparse
 				}
@@ -1626,6 +1656,9 @@ mainparse:
 
 				case ffj_t_Event_Launch:
 					goto handle_Launch
+
+				case ffj_t_Event_LaunchGroup:
+					goto handle_LaunchGroup
 
 				case ffj_t_Event_Kill:
 					goto handle_Kill
@@ -1754,6 +1787,33 @@ handle_Launch:
 		}
 
 		err = uj.Launch.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
+		if err != nil {
+			return err
+		}
+		state = fflib.FFParse_after_value
+	}
+
+	state = fflib.FFParse_after_value
+	goto mainparse
+
+handle_LaunchGroup:
+
+	/* handler: uj.LaunchGroup type=executor.Event_LaunchGroup kind=struct quoted=false*/
+
+	{
+		if tok == fflib.FFTok_null {
+
+			uj.LaunchGroup = nil
+
+			state = fflib.FFParse_after_value
+			goto mainparse
+		}
+
+		if uj.LaunchGroup == nil {
+			uj.LaunchGroup = new(Event_LaunchGroup)
+		}
+
+		err = uj.LaunchGroup.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
 		if err != nil {
 			return err
 		}
@@ -2729,6 +2789,210 @@ handle_Task:
 		}
 
 		err = uj.Task.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
+		if err != nil {
+			return err
+		}
+		state = fflib.FFParse_after_value
+	}
+
+	state = fflib.FFParse_after_value
+	goto mainparse
+
+wantedvalue:
+	return fs.WrapErr(fmt.Errorf("wanted value token, but got token: %v", tok))
+wrongtokenerror:
+	return fs.WrapErr(fmt.Errorf("ffjson: wanted token: %v, but got token: %v output=%s", wantedTok, tok, fs.Output.String()))
+tokerror:
+	if fs.BigError != nil {
+		return fs.WrapErr(fs.BigError)
+	}
+	err = fs.Error.ToError()
+	if err != nil {
+		return fs.WrapErr(err)
+	}
+	panic("ffjson-generated: unreachable, please report bug.")
+done:
+	return nil
+}
+
+func (mj *Event_LaunchGroup) MarshalJSON() ([]byte, error) {
+	var buf fflib.Buffer
+	if mj == nil {
+		buf.WriteString("null")
+		return buf.Bytes(), nil
+	}
+	err := mj.MarshalJSONBuf(&buf)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+func (mj *Event_LaunchGroup) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
+	if mj == nil {
+		buf.WriteString("null")
+		return nil
+	}
+	var err error
+	var obj []byte
+	_ = obj
+	_ = err
+	buf.WriteString(`{ `)
+	if mj.TaskGroup != nil {
+		if true {
+			buf.WriteString(`"task_group":`)
+
+			{
+
+				err = mj.TaskGroup.MarshalJSONBuf(buf)
+				if err != nil {
+					return err
+				}
+
+			}
+			buf.WriteByte(',')
+		}
+	}
+	buf.Rewind(1)
+	buf.WriteByte('}')
+	return nil
+}
+
+const (
+	ffj_t_Event_LaunchGroupbase = iota
+	ffj_t_Event_LaunchGroupno_such_key
+
+	ffj_t_Event_LaunchGroup_TaskGroup
+)
+
+var ffj_key_Event_LaunchGroup_TaskGroup = []byte("task_group")
+
+func (uj *Event_LaunchGroup) UnmarshalJSON(input []byte) error {
+	fs := fflib.NewFFLexer(input)
+	return uj.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
+}
+
+func (uj *Event_LaunchGroup) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
+	var err error = nil
+	currentKey := ffj_t_Event_LaunchGroupbase
+	_ = currentKey
+	tok := fflib.FFTok_init
+	wantedTok := fflib.FFTok_init
+
+mainparse:
+	for {
+		tok = fs.Scan()
+		//	println(fmt.Sprintf("debug: tok: %v  state: %v", tok, state))
+		if tok == fflib.FFTok_error {
+			goto tokerror
+		}
+
+		switch state {
+
+		case fflib.FFParse_map_start:
+			if tok != fflib.FFTok_left_bracket {
+				wantedTok = fflib.FFTok_left_bracket
+				goto wrongtokenerror
+			}
+			state = fflib.FFParse_want_key
+			continue
+
+		case fflib.FFParse_after_value:
+			if tok == fflib.FFTok_comma {
+				state = fflib.FFParse_want_key
+			} else if tok == fflib.FFTok_right_bracket {
+				goto done
+			} else {
+				wantedTok = fflib.FFTok_comma
+				goto wrongtokenerror
+			}
+
+		case fflib.FFParse_want_key:
+			// json {} ended. goto exit. woo.
+			if tok == fflib.FFTok_right_bracket {
+				goto done
+			}
+			if tok != fflib.FFTok_string {
+				wantedTok = fflib.FFTok_string
+				goto wrongtokenerror
+			}
+
+			kn := fs.Output.Bytes()
+			if len(kn) <= 0 {
+				// "" case. hrm.
+				currentKey = ffj_t_Event_LaunchGroupno_such_key
+				state = fflib.FFParse_want_colon
+				goto mainparse
+			} else {
+				switch kn[0] {
+
+				case 't':
+
+					if bytes.Equal(ffj_key_Event_LaunchGroup_TaskGroup, kn) {
+						currentKey = ffj_t_Event_LaunchGroup_TaskGroup
+						state = fflib.FFParse_want_colon
+						goto mainparse
+					}
+
+				}
+
+				if fflib.EqualFoldRight(ffj_key_Event_LaunchGroup_TaskGroup, kn) {
+					currentKey = ffj_t_Event_LaunchGroup_TaskGroup
+					state = fflib.FFParse_want_colon
+					goto mainparse
+				}
+
+				currentKey = ffj_t_Event_LaunchGroupno_such_key
+				state = fflib.FFParse_want_colon
+				goto mainparse
+			}
+
+		case fflib.FFParse_want_colon:
+			if tok != fflib.FFTok_colon {
+				wantedTok = fflib.FFTok_colon
+				goto wrongtokenerror
+			}
+			state = fflib.FFParse_want_value
+			continue
+		case fflib.FFParse_want_value:
+
+			if tok == fflib.FFTok_left_brace || tok == fflib.FFTok_left_bracket || tok == fflib.FFTok_integer || tok == fflib.FFTok_double || tok == fflib.FFTok_string || tok == fflib.FFTok_bool || tok == fflib.FFTok_null {
+				switch currentKey {
+
+				case ffj_t_Event_LaunchGroup_TaskGroup:
+					goto handle_TaskGroup
+
+				case ffj_t_Event_LaunchGroupno_such_key:
+					err = fs.SkipField(tok)
+					if err != nil {
+						return fs.WrapErr(err)
+					}
+					state = fflib.FFParse_after_value
+					goto mainparse
+				}
+			} else {
+				goto wantedvalue
+			}
+		}
+	}
+
+handle_TaskGroup:
+
+	/* handler: uj.TaskGroup type=mesos.TaskGroupInfo kind=struct quoted=false*/
+
+	{
+		if tok == fflib.FFTok_null {
+
+			uj.TaskGroup = nil
+
+			state = fflib.FFParse_after_value
+			goto mainparse
+		}
+
+		if uj.TaskGroup == nil {
+			uj.TaskGroup = new(mesos.TaskGroupInfo)
+		}
+
+		err = uj.TaskGroup.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
 		if err != nil {
 			return err
 		}
