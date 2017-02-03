@@ -1,4 +1,3 @@
-//
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -83,6 +82,9 @@ message Event {
     // This value will be set if the master is sending heartbeats. See
     // the comment above on 'HEARTBEAT' for more details.
     optional double heartbeat_interval_seconds = 2;
+
+    // Since Mesos 1.1.
+    optional MasterInfo master_info = 3;
   }
 
   // Received whenever there are new resources that are offered to the
@@ -145,7 +147,7 @@ message Event {
     required bytes data = 3;
   }
 
-  // Received when a agent is removed from the cluster (e.g., failed
+  // Received when an agent is removed from the cluster (e.g., failed
   // health checks) or when an executor is terminated. Note that, this
   // event coincides with receipt of terminal UPDATE events for any
   // active tasks belonging to the agent or executor and receipt of
@@ -225,6 +227,7 @@ message Call {
     // exceptions getting thrown from within Scheduler callbacks,
     // something that is not an issue with the Event/Call API.
     option (gogoproto.goproto_enum_prefix) = true;
+
   }
 
   // Subscribes the scheduler with the master to receive events. A
@@ -295,6 +298,13 @@ message Call {
   // receives a terminal update (See TaskState in v1/mesos.proto) for
   // it. If the task is unknown to the master, a TASK_LOST update is
   // generated.
+  //
+  // If a task within a task group is killed before the group is
+  // delivered to the executor, all tasks in the task group are
+  // killed. When a task group has been delivered to the executor,
+  // it is up to the executor to decide how to deal with the kill.
+  // Note The default Mesos executor will currently kill all the
+  // tasks in the task group if it gets a kill for any task.
   message Kill {
     required TaskID task_id = 1 [(gogoproto.nullable) = false, (gogoproto.customname) = "TaskID"];
     optional AgentID agent_id = 2 [(gogoproto.customname) = "AgentID"];
