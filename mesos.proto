@@ -410,7 +410,7 @@ message HealthCheck {
   // a TCP connection to the specified port.
   message TCPCheckInfo {
     // Port expected to be open.
-    required uint32 port = 1;
+    required uint32 port = 1 [(gogoproto.nullable) = false];
   }
 
   // TODO(benh): Consider adding a URL health check strategy which
@@ -585,7 +585,7 @@ message ExecutorInfo {
 
   required ExecutorID executor_id = 1 [(gogoproto.nullable) = false, (gogoproto.customname) = "ExecutorID"];
   optional FrameworkID framework_id = 8 [(gogoproto.customname) = "FrameworkID"]; // TODO(benh): Make this required.
-  optional CommandInfo command = 7 [(gogoproto.nullable) = false];
+  optional CommandInfo command = 7;
 
   // Executor provided with a container will launch the container
   // with the executor's CommandInfo and we expect the container to
@@ -1916,7 +1916,7 @@ message Volume {
 
       // A path relative to the corresponding container's sandbox.
       // Note that upwards traversal (i.e. ../../abc) is not allowed.
-      required string path = 2;
+      required string path = 2 [(gogoproto.nullable) = false];
     }
 
     // Enum fields should be optional, see: MESOS-4997.
@@ -2011,8 +2011,8 @@ message NetworkInfo {
 
   // Specifies a port mapping request for the task on this network.
   message PortMapping {
-    required uint32 host_port = 1;
-    required uint32 container_port = 2;
+    required uint32 host_port = 1 [(gogoproto.nullable) = false];
+    required uint32 container_port = 2 [(gogoproto.nullable) = false];
     // Protocol to expose as (ie: tcp, udp).
     optional string protocol = 3;
   }
