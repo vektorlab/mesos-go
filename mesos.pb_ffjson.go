@@ -7770,17 +7770,21 @@ func (mj *ExecutorInfo) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			buf.WriteByte(',')
 		}
 	}
-	buf.WriteString(`"command":`)
+	if mj.Command != nil {
+		if true {
+			buf.WriteString(`"command":`)
 
-	{
+			{
 
-		err = mj.Command.MarshalJSONBuf(buf)
-		if err != nil {
-			return err
+				err = mj.Command.MarshalJSONBuf(buf)
+				if err != nil {
+					return err
+				}
+
+			}
+			buf.WriteByte(',')
 		}
-
 	}
-	buf.WriteByte(',')
 	if mj.Container != nil {
 		if true {
 			buf.WriteString(`"container":`)
@@ -8324,8 +8328,14 @@ handle_Command:
 	{
 		if tok == fflib.FFTok_null {
 
+			uj.Command = nil
+
 			state = fflib.FFParse_after_value
 			goto mainparse
+		}
+
+		if uj.Command == nil {
+			uj.Command = new(CommandInfo)
 		}
 
 		err = uj.Command.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
@@ -11981,15 +11991,8 @@ func (mj *HealthCheck_TCPCheckInfo) MarshalJSONBuf(buf fflib.EncodingBuffer) err
 	var obj []byte
 	_ = obj
 	_ = err
-	buf.WriteString(`{ `)
-	if mj.Port != nil {
-		if true {
-			buf.WriteString(`"port":`)
-			fflib.FormatBits2(buf, uint64(*mj.Port), 10, false)
-			buf.WriteByte(',')
-		}
-	}
-	buf.Rewind(1)
+	buf.WriteString(`{"port":`)
+	fflib.FormatBits2(buf, uint64(mj.Port), 10, false)
 	buf.WriteByte('}')
 	return nil
 }
@@ -12126,8 +12129,6 @@ handle_Port:
 
 		if tok == fflib.FFTok_null {
 
-			uj.Port = nil
-
 		} else {
 
 			tval, err := fflib.ParseUint(fs.Output.Bytes(), 10, 32)
@@ -12136,8 +12137,7 @@ handle_Port:
 				return fs.WrapErr(err)
 			}
 
-			ttypval := uint32(tval)
-			uj.Port = &ttypval
+			uj.Port = uint32(tval)
 
 		}
 	}
@@ -19808,21 +19808,11 @@ func (mj *NetworkInfo_PortMapping) MarshalJSONBuf(buf fflib.EncodingBuffer) erro
 	var obj []byte
 	_ = obj
 	_ = err
-	buf.WriteString(`{ `)
-	if mj.HostPort != nil {
-		if true {
-			buf.WriteString(`"host_port":`)
-			fflib.FormatBits2(buf, uint64(*mj.HostPort), 10, false)
-			buf.WriteByte(',')
-		}
-	}
-	if mj.ContainerPort != nil {
-		if true {
-			buf.WriteString(`"container_port":`)
-			fflib.FormatBits2(buf, uint64(*mj.ContainerPort), 10, false)
-			buf.WriteByte(',')
-		}
-	}
+	buf.WriteString(`{ "host_port":`)
+	fflib.FormatBits2(buf, uint64(mj.HostPort), 10, false)
+	buf.WriteString(`,"container_port":`)
+	fflib.FormatBits2(buf, uint64(mj.ContainerPort), 10, false)
+	buf.WriteByte(',')
 	if mj.Protocol != nil {
 		if true {
 			buf.WriteString(`"protocol":`)
@@ -20009,8 +19999,6 @@ handle_HostPort:
 
 		if tok == fflib.FFTok_null {
 
-			uj.HostPort = nil
-
 		} else {
 
 			tval, err := fflib.ParseUint(fs.Output.Bytes(), 10, 32)
@@ -20019,8 +20007,7 @@ handle_HostPort:
 				return fs.WrapErr(err)
 			}
 
-			ttypval := uint32(tval)
-			uj.HostPort = &ttypval
+			uj.HostPort = uint32(tval)
 
 		}
 	}
@@ -20042,8 +20029,6 @@ handle_ContainerPort:
 
 		if tok == fflib.FFTok_null {
 
-			uj.ContainerPort = nil
-
 		} else {
 
 			tval, err := fflib.ParseUint(fs.Output.Bytes(), 10, 32)
@@ -20052,8 +20037,7 @@ handle_ContainerPort:
 				return fs.WrapErr(err)
 			}
 
-			ttypval := uint32(tval)
-			uj.ContainerPort = &ttypval
+			uj.ContainerPort = uint32(tval)
 
 		}
 	}
@@ -45973,7 +45957,7 @@ func (mj *Volume_Source_SandboxPath) MarshalJSONBuf(buf fflib.EncodingBuffer) er
 	var obj []byte
 	_ = obj
 	_ = err
-	buf.WriteString(`{ `)
+	buf.WriteByte('{')
 	if mj.Type != nil {
 		if true {
 			buf.WriteString(`"type":`)
@@ -45990,14 +45974,8 @@ func (mj *Volume_Source_SandboxPath) MarshalJSONBuf(buf fflib.EncodingBuffer) er
 			buf.WriteByte(',')
 		}
 	}
-	if mj.Path != nil {
-		if true {
-			buf.WriteString(`"path":`)
-			fflib.WriteJsonString(buf, string(*mj.Path))
-			buf.WriteByte(',')
-		}
-	}
-	buf.Rewind(1)
+	buf.WriteString(`"path":`)
+	fflib.WriteJsonString(buf, string(mj.Path))
 	buf.WriteByte('}')
 	return nil
 }
@@ -46187,15 +46165,11 @@ handle_Path:
 
 		if tok == fflib.FFTok_null {
 
-			uj.Path = nil
-
 		} else {
 
-			var tval string
 			outBuf := fs.Output.Bytes()
 
-			tval = string(string(outBuf))
-			uj.Path = &tval
+			uj.Path = string(string(outBuf))
 
 		}
 	}
