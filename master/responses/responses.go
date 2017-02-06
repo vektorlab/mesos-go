@@ -24,7 +24,7 @@ func UnmarshalMaster(r mesos.Response, ct master.Response_Type) (*master.Respons
 }
 
 // GetAgents is a convenience function for returning mesos.AgentInfos from a mesos.Response
-func GetAgentss(r mesos.Response, err error) ([]*mesos.AgentInfo, error) {
+func GetAgents(r mesos.Response, err error) ([]*mesos.AgentInfo, error) {
 	if err != nil {
 		return nil, err
 	}
