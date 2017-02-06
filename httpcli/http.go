@@ -70,7 +70,7 @@ type ProtocolError int
 func (pe ProtocolError) Error() string { return fmt.Sprintf("Unexpected Mesos HTTP error: %d", int(pe)) }
 
 const (
-	debug = false // TODO(jdef) kill me at some point
+	debug = true // TODO(jdef) kill me at some point
 
 	indexRequestContentType  = 0 // index into Client.codec.MediaTypes for request content type
 	indexResponseContentType = 1 // index into Client.codec.MediaTypes for expected response content type
@@ -214,7 +214,7 @@ func (c *Client) HandleResponse(res *http.Response, err error) (mesos.Response, 
 		return nil, err
 	}
 
-	var events encoding.Decoder
+	var decoder encoding.Decoder
 	switch res.StatusCode {
 	case http.StatusOK:
 		if debug {
@@ -225,7 +225,7 @@ func (c *Client) HandleResponse(res *http.Response, err error) (mesos.Response, 
 			res.Body.Close()
 			return nil, fmt.Errorf("unexpected content type: %q", ct) //TODO(jdef) extact this into a typed error
 		}
-		events = c.codec.NewDecoder(recordio.NewFrameReader(res.Body))
+		decoder = c.codec.NewFramingDecoder(recordio.NewFrameReader(res.Body))
 	case http.StatusAccepted:
 		if debug {
 			log.Println("request Accepted")
@@ -235,7 +235,7 @@ func (c *Client) HandleResponse(res *http.Response, err error) (mesos.Response, 
 		err = c.errorMapper(res.StatusCode)
 	}
 	return &Response{
-		decoder: events,
+		decoder: decoder,
 		Closer:  res.Body,
 		Header:  res.Header,
 	}, err
@@ -335,6 +335,35 @@ func RequestOptions(opts ...RequestOpt) Opt {
 		old := append([]RequestOpt{}, c.requestOpts...)
 		c.requestOpts = opts
 		return RequestOptions(old...)
+	}
+}
+
+// NonFramingHandler returns a ResponseHandler for making calls
+// to the Mesos operator API, useful for everything except SUBSCRIBE,
+// which returns a streaming response like the Scheduler and Executor.
+func NonFramingHandler(c *Client) ResponseHandler {
+	return func(res *http.Response, err error) (mesos.Response, error) {
+		if err != nil {
+			if res != nil && res.Body != nil {
+				res.Body.Close()
+			}
+			return nil, err
+		}
+		switch res.StatusCode {
+		case http.StatusOK:
+			ct := res.Header.Get("Content-Type")
+			if ct != c.codec.MediaTypes[indexResponseContentType] {
+				res.Body.Close()
+				return nil, fmt.Errorf("unexpected content type: %q", ct) //TODO(jdef) extact this into a typed error
+			}
+		default:
+			err = c.errorMapper(res.StatusCode)
+		}
+		return &Response{
+			decoder: c.codec.NewDecoder(res.Body),
+			Closer:  res.Body,
+			Header:  res.Header,
+		}, err
 	}
 }
 

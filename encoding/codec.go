@@ -3,6 +3,7 @@ package encoding
 import (
 	"encoding/json"
 	"io"
+	"io/ioutil"
 
 	"github.com/mesos/mesos-go/encoding/framing"
 	"github.com/mesos/mesos-go/encoding/proto"
@@ -20,17 +21,19 @@ const (
 var (
 	// ProtobufCodec is the Mesos scheduler API Protobufs codec.
 	ProtobufCodec = Codec{
-		Name:       "protobuf",
-		MediaTypes: [2]string{ProtobufMediaType, ProtobufMediaType},
-		NewEncoder: NewProtobufEncoder,
-		NewDecoder: NewProtobufDecoder,
+		Name:              "protobuf",
+		MediaTypes:        [2]string{ProtobufMediaType, ProtobufMediaType},
+		NewEncoder:        NewProtobufEncoder,
+		NewDecoder:        NewProtobufDecoder,
+		NewFramingDecoder: NewFramingProtobufDecoder,
 	}
 	// JSONCodec is the Mesos scheduler API JSON codec.
 	JSONCodec = Codec{
-		Name:       "json",
-		MediaTypes: [2]string{JSONMediaType, JSONMediaType},
-		NewEncoder: NewJSONEncoder,
-		NewDecoder: NewJSONDecoder,
+		Name:              "json",
+		MediaTypes:        [2]string{JSONMediaType, JSONMediaType},
+		NewEncoder:        NewJSONEncoder,
+		NewDecoder:        NewJSONDecoder,
+		NewFramingDecoder: NewFramingJSONDecoder,
 	}
 )
 
@@ -44,7 +47,9 @@ type Codec struct {
 	// NewEncoder returns a new encoder for the defined media type.
 	NewEncoder func(io.Writer) Encoder
 	// NewDecoder returns a new decoder for the defined media type.
-	NewDecoder func(framing.Reader) Decoder
+	NewFramingDecoder func(framing.Reader) Decoder
+
+	NewDecoder func(io.Reader) Decoder
 }
 
 // String implements the fmt.Stringer interface.
@@ -87,9 +92,9 @@ func NewJSONEncoder(w io.Writer) Encoder {
 	return func(m Marshaler) error { return enc.Encode(m) }
 }
 
-// NewProtobufDecoder returns a new Decoder of Protobuf messages read from the
-// given io.Reader to Events.
-func NewProtobufDecoder(r framing.Reader) Decoder {
+// NewFramingProtobufDecoder returns a new Decoder of Protobuf messages read from the
+// given io.Reader to Events suitable for decoding a streaming response.
+func NewFramingProtobufDecoder(r framing.Reader) Decoder {
 	uf := func(b []byte, m interface{}) error {
 		return pb.Unmarshal(b, m.(pb.Message))
 	}
@@ -97,9 +102,31 @@ func NewProtobufDecoder(r framing.Reader) Decoder {
 	return func(u Unmarshaler) error { return dec.Decode(u) }
 }
 
-// NewJSONDecoder returns a new Decoder of JSON messages read from the
-// given io.Reader to Events.
-func NewJSONDecoder(r framing.Reader) Decoder {
+// NewProtobufDecoder returns a new Decoder of Protobuf messages for a non-streaming response.
+func NewProtobufDecoder(r io.Reader) Decoder {
+	return func(u Unmarshaler) error {
+		raw, err := ioutil.ReadAll(r)
+		if err != nil {
+			return err
+		}
+		return pb.Unmarshal(raw, u.(pb.Message))
+	}
+}
+
+// NewFramingJSONDecoder returns a new Decoder of JSON messages read from the
+// given io.Reader to Events suitable for decoding a streaming response.
+func NewFramingJSONDecoder(r framing.Reader) Decoder {
 	dec := framing.NewDecoder(r, json.Unmarshal)
 	return func(u Unmarshaler) error { return dec.Decode(u) }
+}
+
+// NewJSONDecoder a new Decoder of Protobuf messages for a non-streaming response.
+func NewJSONDecoder(r io.Reader) Decoder {
+	return func(u Unmarshaler) error {
+		raw, err := ioutil.ReadAll(r)
+		if err != nil {
+			return err
+		}
+		return json.Unmarshal(raw, u)
+	}
 }
