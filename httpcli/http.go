@@ -13,7 +13,6 @@ import (
 
 	"github.com/mesos/mesos-go"
 	"github.com/mesos/mesos-go/encoding"
-	"github.com/mesos/mesos-go/recordio"
 )
 
 var (
@@ -127,7 +126,7 @@ type Client struct {
 // invoking Do.
 func New(opts ...Opt) *Client {
 	c := &Client{
-		codec:       &encoding.ProtobufCodec,
+		codec:       &encoding.FramingProtobufCodec,
 		do:          With(),
 		header:      http.Header{},
 		errorMapper: defaultErrorMapper,
@@ -225,7 +224,7 @@ func (c *Client) HandleResponse(res *http.Response, err error) (mesos.Response, 
 			res.Body.Close()
 			return nil, fmt.Errorf("unexpected content type: %q", ct) //TODO(jdef) extact this into a typed error
 		}
-		decoder = c.codec.NewFramingDecoder(recordio.NewFrameReader(res.Body))
+		decoder = c.codec.NewDecoder(res.Body)
 	case http.StatusAccepted:
 		if debug {
 			log.Println("request Accepted")
@@ -335,35 +334,6 @@ func RequestOptions(opts ...RequestOpt) Opt {
 		old := append([]RequestOpt{}, c.requestOpts...)
 		c.requestOpts = opts
 		return RequestOptions(old...)
-	}
-}
-
-// NonFramingHandler returns a ResponseHandler for making calls
-// to the Mesos operator API, useful for everything except SUBSCRIBE,
-// which returns a streaming response like the Scheduler and Executor.
-func NonFramingHandler(c *Client) ResponseHandler {
-	return func(res *http.Response, err error) (mesos.Response, error) {
-		if err != nil {
-			if res != nil && res.Body != nil {
-				res.Body.Close()
-			}
-			return nil, err
-		}
-		switch res.StatusCode {
-		case http.StatusOK:
-			ct := res.Header.Get("Content-Type")
-			if ct != c.codec.MediaTypes[indexResponseContentType] {
-				res.Body.Close()
-				return nil, fmt.Errorf("unexpected content type: %q", ct) //TODO(jdef) extact this into a typed error
-			}
-		default:
-			err = c.errorMapper(res.StatusCode)
-		}
-		return &Response{
-			decoder: c.codec.NewDecoder(res.Body),
-			Closer:  res.Body,
-			Header:  res.Header,
-		}, err
 	}
 }
 

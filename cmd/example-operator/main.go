@@ -53,6 +53,7 @@ func subscribe() {
 	var (
 		client = httpcli.New(
 			httpcli.Endpoint("http://localhost:5050/api/v1"),
+			// httpcli.Codec(&encoding.FramingJSONCodec),
 		)
 		subscribe = calls.Subscribe()
 	)
@@ -74,11 +75,10 @@ func tasks() {
 	var (
 		client = httpcli.New(
 			httpcli.Endpoint("http://localhost:5050/api/v1"),
+			// Change to the non-framing Protobuf codec for simple HTTP
+			// calls to the operator API.
+			httpcli.Codec(&encoding.ProtobufCodec),
 		)
-	)
-	// Changes ResponseHandler to non-framing variant
-	client.With(
-		httpcli.HandleResponse(httpcli.NonFramingHandler(client)),
 	)
 	tasks, err := responses.GetTasks(client.Do(calls.GetTasks()))
 	if err != nil {

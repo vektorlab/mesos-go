@@ -7,6 +7,7 @@ import (
 
 	"github.com/mesos/mesos-go/encoding/framing"
 	"github.com/mesos/mesos-go/encoding/proto"
+	"github.com/mesos/mesos-go/recordio"
 
 	pb "github.com/gogo/protobuf/proto"
 )
@@ -19,21 +20,37 @@ const (
 )
 
 var (
-	// ProtobufCodec is the Mesos scheduler API Protobufs codec.
+	// ProtobufCodec is the Mesos Protobuf codec.
 	ProtobufCodec = Codec{
-		Name:              "protobuf",
-		MediaTypes:        [2]string{ProtobufMediaType, ProtobufMediaType},
-		NewEncoder:        NewProtobufEncoder,
-		NewDecoder:        NewProtobufDecoder,
-		NewFramingDecoder: NewFramingProtobufDecoder,
+		Name:       "protobuf",
+		MediaTypes: [2]string{ProtobufMediaType, ProtobufMediaType},
+		NewEncoder: NewProtobufEncoder,
+		NewDecoder: NewProtobufDecoder,
 	}
-	// JSONCodec is the Mesos scheduler API JSON codec.
+	// JSONCodec is the Mesos JSON codec.
 	JSONCodec = Codec{
-		Name:              "json",
-		MediaTypes:        [2]string{JSONMediaType, JSONMediaType},
-		NewEncoder:        NewJSONEncoder,
-		NewDecoder:        NewJSONDecoder,
-		NewFramingDecoder: NewFramingJSONDecoder,
+		Name:       "json",
+		MediaTypes: [2]string{JSONMediaType, JSONMediaType},
+		NewEncoder: NewJSONEncoder,
+		NewDecoder: NewJSONDecoder,
+	}
+
+	// FramingProtobufCodec is the Protobuf serialization format media type
+	// for use with Mesos streaming responses.
+	FramingProtobufCodec = Codec{
+		Name:       "protobuf-framing",
+		MediaTypes: [2]string{ProtobufMediaType, ProtobufMediaType},
+		NewEncoder: NewProtobufEncoder,
+		NewDecoder: NewFramingProtobufDecoder,
+	}
+
+	// FramingJSONCodec is the JSON codec for use with Mesos
+	// streaming responses.
+	FramingJSONCodec = Codec{
+		Name:       "json-framing",
+		MediaTypes: [2]string{JSONMediaType, JSONMediaType},
+		NewEncoder: NewJSONEncoder,
+		NewDecoder: NewFramingJSONDecoder,
 	}
 )
 
@@ -47,8 +64,6 @@ type Codec struct {
 	// NewEncoder returns a new encoder for the defined media type.
 	NewEncoder func(io.Writer) Encoder
 	// NewDecoder returns a new decoder for the defined media type.
-	NewFramingDecoder func(framing.Reader) Decoder
-
 	NewDecoder func(io.Reader) Decoder
 }
 
@@ -94,11 +109,11 @@ func NewJSONEncoder(w io.Writer) Encoder {
 
 // NewFramingProtobufDecoder returns a new Decoder of Protobuf messages read from the
 // given io.Reader to Events suitable for decoding a streaming response.
-func NewFramingProtobufDecoder(r framing.Reader) Decoder {
+func NewFramingProtobufDecoder(r io.Reader) Decoder {
 	uf := func(b []byte, m interface{}) error {
 		return pb.Unmarshal(b, m.(pb.Message))
 	}
-	dec := framing.NewDecoder(r, uf)
+	dec := framing.NewDecoder(recordio.NewFrameReader(r), uf)
 	return func(u Unmarshaler) error { return dec.Decode(u) }
 }
 
@@ -115,8 +130,8 @@ func NewProtobufDecoder(r io.Reader) Decoder {
 
 // NewFramingJSONDecoder returns a new Decoder of JSON messages read from the
 // given io.Reader to Events suitable for decoding a streaming response.
-func NewFramingJSONDecoder(r framing.Reader) Decoder {
-	dec := framing.NewDecoder(r, json.Unmarshal)
+func NewFramingJSONDecoder(r io.Reader) Decoder {
+	dec := framing.NewDecoder(recordio.NewFrameReader(r), json.Unmarshal)
 	return func(u Unmarshaler) error { return dec.Decode(u) }
 }
 
