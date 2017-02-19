@@ -1488,7 +1488,7 @@ message Task {
   required string name = 1 [(gogoproto.nullable) = false];
   required TaskID task_id = 2 [(gogoproto.nullable) = false, (gogoproto.customname) = "TaskID"];
   required FrameworkID framework_id = 3 [(gogoproto.nullable) = false, (gogoproto.customname) = "FrameworkID"];
-  optional ExecutorID executor_id = 4 [(gogoproto.customname) = "ExecutorID"];
+  optional ExecutorID executor_id = 4 [(gogoproto.nullable) = false, (gogoproto.customname) = "ExecutorID"];
   required AgentID agent_id = 5 [(gogoproto.nullable) = false, (gogoproto.customname) = "AgentID"];
   required TaskState state = 6; // Latest state of the task.
   repeated Resource resources = 7 [(gogoproto.nullable) = false];
@@ -1634,7 +1634,7 @@ message TaskStatus {
   optional Reason reason = 10;
   optional bytes data = 3;
   optional AgentID agent_id = 5 [(gogoproto.customname) = "AgentID"];
-  optional ExecutorID executor_id = 7 [(gogoproto.customname) = "ExecutorID"]; // TODO(benh): Use in master/agent.
+  optional ExecutorID executor_id = 7 [(gogoproto.nullable) = false, (gogoproto.customname) = "ExecutorID"]; // TODO(benh): Use in master/agent.
   optional double timestamp = 6;
 
   // Statuses that are delivered reliably to the scheduler will
