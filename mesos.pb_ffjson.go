@@ -36011,23 +36011,17 @@ func (mj *Task) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		}
 
 	}
-	buf.WriteByte(',')
-	if mj.ExecutorID != nil {
-		if true {
-			buf.WriteString(`"executor_id":`)
+	buf.WriteString(`,"executor_id":`)
 
-			{
+	{
 
-				err = mj.ExecutorID.MarshalJSONBuf(buf)
-				if err != nil {
-					return err
-				}
-
-			}
-			buf.WriteByte(',')
+		err = mj.ExecutorID.MarshalJSONBuf(buf)
+		if err != nil {
+			return err
 		}
+
 	}
-	buf.WriteString(`"agent_id":`)
+	buf.WriteString(`,"agent_id":`)
 
 	{
 
@@ -36642,14 +36636,8 @@ handle_ExecutorID:
 	{
 		if tok == fflib.FFTok_null {
 
-			uj.ExecutorID = nil
-
 			state = fflib.FFParse_after_value
 			goto mainparse
-		}
-
-		if uj.ExecutorID == nil {
-			uj.ExecutorID = new(ExecutorID)
 		}
 
 		err = uj.ExecutorID.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
@@ -38520,21 +38508,17 @@ func (mj *TaskStatus) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			buf.WriteByte(',')
 		}
 	}
-	if mj.ExecutorID != nil {
-		if true {
-			buf.WriteString(`"executor_id":`)
+	buf.WriteString(`"executor_id":`)
 
-			{
+	{
 
-				err = mj.ExecutorID.MarshalJSONBuf(buf)
-				if err != nil {
-					return err
-				}
-
-			}
-			buf.WriteByte(',')
+		err = mj.ExecutorID.MarshalJSONBuf(buf)
+		if err != nil {
+			return err
 		}
+
 	}
+	buf.WriteByte(',')
 	if mj.Timestamp != nil {
 		if true {
 			buf.WriteString(`"timestamp":`)
@@ -39210,14 +39194,8 @@ handle_ExecutorID:
 	{
 		if tok == fflib.FFTok_null {
 
-			uj.ExecutorID = nil
-
 			state = fflib.FFParse_after_value
 			goto mainparse
-		}
-
-		if uj.ExecutorID == nil {
-			uj.ExecutorID = new(ExecutorID)
 		}
 
 		err = uj.ExecutorID.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
