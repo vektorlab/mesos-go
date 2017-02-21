@@ -1867,7 +1867,7 @@ message Volume {
 
   // Absolute path pointing to a directory or file on the host or a
   // path relative to the container work directory.
-  optional string host_path = 2;
+  optional string host_path = 2 [(gogoproto.nullable) = false];
 
   // The source of the volume is an Image which describes a root
   // filesystem which will be provisioned by Mesos.

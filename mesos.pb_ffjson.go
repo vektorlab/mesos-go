@@ -44865,14 +44865,9 @@ func (mj *Volume) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	}
 	buf.WriteString(`"container_path":`)
 	fflib.WriteJsonString(buf, string(mj.ContainerPath))
+	buf.WriteString(`,"host_path":`)
+	fflib.WriteJsonString(buf, string(mj.HostPath))
 	buf.WriteByte(',')
-	if mj.HostPath != nil {
-		if true {
-			buf.WriteString(`"host_path":`)
-			fflib.WriteJsonString(buf, string(*mj.HostPath))
-			buf.WriteByte(',')
-		}
-	}
 	if mj.Image != nil {
 		if true {
 			buf.WriteString(`"image":`)
@@ -45182,15 +45177,11 @@ handle_HostPath:
 
 		if tok == fflib.FFTok_null {
 
-			uj.HostPath = nil
-
 		} else {
 
-			var tval string
 			outBuf := fs.Output.Bytes()
 
-			tval = string(string(outBuf))
-			uj.HostPath = &tval
+			uj.HostPath = string(string(outBuf))
 
 		}
 	}
