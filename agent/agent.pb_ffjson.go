@@ -1615,29 +1615,12 @@ func (mj *Call_ReadFile) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	var obj []byte
 	_ = obj
 	_ = err
-	buf.WriteString(`{ `)
-	if mj.Path != nil {
-		if true {
-			buf.WriteString(`"path":`)
-			fflib.WriteJsonString(buf, string(*mj.Path))
-			buf.WriteByte(',')
-		}
-	}
-	if mj.Offset != nil {
-		if true {
-			buf.WriteString(`"offset":`)
-			fflib.FormatBits2(buf, uint64(*mj.Offset), 10, false)
-			buf.WriteByte(',')
-		}
-	}
-	if mj.Length != nil {
-		if true {
-			buf.WriteString(`"length":`)
-			fflib.FormatBits2(buf, uint64(*mj.Length), 10, false)
-			buf.WriteByte(',')
-		}
-	}
-	buf.Rewind(1)
+	buf.WriteString(`{"path":`)
+	fflib.WriteJsonString(buf, string(mj.Path))
+	buf.WriteString(`,"offset":`)
+	fflib.FormatBits2(buf, uint64(mj.Offset), 10, false)
+	buf.WriteString(`,"length":`)
+	fflib.FormatBits2(buf, uint64(mj.Length), 10, false)
 	buf.WriteByte('}')
 	return nil
 }
@@ -1816,15 +1799,11 @@ handle_Path:
 
 		if tok == fflib.FFTok_null {
 
-			uj.Path = nil
-
 		} else {
 
-			var tval string
 			outBuf := fs.Output.Bytes()
 
-			tval = string(string(outBuf))
-			uj.Path = &tval
+			uj.Path = string(string(outBuf))
 
 		}
 	}
@@ -1846,8 +1825,6 @@ handle_Offset:
 
 		if tok == fflib.FFTok_null {
 
-			uj.Offset = nil
-
 		} else {
 
 			tval, err := fflib.ParseUint(fs.Output.Bytes(), 10, 64)
@@ -1856,8 +1833,7 @@ handle_Offset:
 				return fs.WrapErr(err)
 			}
 
-			ttypval := uint64(tval)
-			uj.Offset = &ttypval
+			uj.Offset = uint64(tval)
 
 		}
 	}
@@ -1879,8 +1855,6 @@ handle_Length:
 
 		if tok == fflib.FFTok_null {
 
-			uj.Length = nil
-
 		} else {
 
 			tval, err := fflib.ParseUint(fs.Output.Bytes(), 10, 64)
@@ -1889,8 +1863,7 @@ handle_Length:
 				return fs.WrapErr(err)
 			}
 
-			ttypval := uint64(tval)
-			uj.Length = &ttypval
+			uj.Length = uint64(tval)
 
 		}
 	}
@@ -7878,30 +7851,20 @@ func (mj *Response_ReadFile) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	var obj []byte
 	_ = obj
 	_ = err
-	buf.WriteString(`{ `)
-	if mj.Size_ != nil {
-		if true {
-			buf.WriteString(`"size":`)
-			fflib.FormatBits2(buf, uint64(*mj.Size_), 10, false)
-			buf.WriteByte(',')
+	buf.WriteString(`{"size":`)
+	fflib.FormatBits2(buf, uint64(mj.Size_), 10, false)
+	buf.WriteString(`,"data":`)
+	if mj.Data != nil {
+		buf.WriteString(`"`)
+		{
+			enc := base64.NewEncoder(base64.StdEncoding, buf)
+			enc.Write(reflect.Indirect(reflect.ValueOf(mj.Data)).Bytes())
+			enc.Close()
 		}
+		buf.WriteString(`"`)
+	} else {
+		buf.WriteString(`null`)
 	}
-	if len(mj.Data) != 0 {
-		buf.WriteString(`"data":`)
-		if mj.Data != nil {
-			buf.WriteString(`"`)
-			{
-				enc := base64.NewEncoder(base64.StdEncoding, buf)
-				enc.Write(reflect.Indirect(reflect.ValueOf(mj.Data)).Bytes())
-				enc.Close()
-			}
-			buf.WriteString(`"`)
-		} else {
-			buf.WriteString(`null`)
-		}
-		buf.WriteByte(',')
-	}
-	buf.Rewind(1)
 	buf.WriteByte('}')
 	return nil
 }
@@ -8059,8 +8022,6 @@ handle_Size_:
 
 		if tok == fflib.FFTok_null {
 
-			uj.Size_ = nil
-
 		} else {
 
 			tval, err := fflib.ParseUint(fs.Output.Bytes(), 10, 64)
@@ -8069,8 +8030,7 @@ handle_Size_:
 				return fs.WrapErr(err)
 			}
 
-			ttypval := uint64(tval)
-			uj.Size_ = &ttypval
+			uj.Size_ = uint64(tval)
 
 		}
 	}

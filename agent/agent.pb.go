@@ -331,34 +331,34 @@ func (m *Call_ListFiles) GetPath() string {
 // Reads data from a file.
 type Call_ReadFile struct {
 	// The path of file.
-	Path *string `protobuf:"bytes,1,req,name=path" json:"path,omitempty"`
+	Path string `protobuf:"bytes,1,req,name=path" json:"path"`
 	// Initial offset in file to start reading from.
-	Offset *uint64 `protobuf:"varint,2,req,name=offset" json:"offset,omitempty"`
+	Offset uint64 `protobuf:"varint,2,req,name=offset" json:"offset"`
 	// The maximum number of bytes to read. The read length is capped at 16
 	// memory pages.
-	Length *uint64 `protobuf:"varint,3,opt,name=length" json:"length,omitempty"`
+	Length uint64 `protobuf:"varint,3,opt,name=length" json:"length"`
 }
 
 func (m *Call_ReadFile) Reset()      { *m = Call_ReadFile{} }
 func (*Call_ReadFile) ProtoMessage() {}
 
 func (m *Call_ReadFile) GetPath() string {
-	if m != nil && m.Path != nil {
-		return *m.Path
+	if m != nil {
+		return m.Path
 	}
 	return ""
 }
 
 func (m *Call_ReadFile) GetOffset() uint64 {
-	if m != nil && m.Offset != nil {
-		return *m.Offset
+	if m != nil {
+		return m.Offset
 	}
 	return 0
 }
 
 func (m *Call_ReadFile) GetLength() uint64 {
-	if m != nil && m.Length != nil {
-		return *m.Length
+	if m != nil {
+		return m.Length
 	}
 	return 0
 }
@@ -638,16 +638,16 @@ func (m *Response_ListFiles) GetFileInfos() []*mesos.FileInfo {
 // Contains the file data.
 type Response_ReadFile struct {
 	// The size of file (in bytes).
-	Size_ *uint64 `protobuf:"varint,1,req,name=size" json:"size,omitempty"`
-	Data  []byte  `protobuf:"bytes,2,req,name=data" json:"data,omitempty"`
+	Size_ uint64 `protobuf:"varint,1,req,name=size" json:"size"`
+	Data  []byte `protobuf:"bytes,2,req,name=data" json:"data"`
 }
 
 func (m *Response_ReadFile) Reset()      { *m = Response_ReadFile{} }
 func (*Response_ReadFile) ProtoMessage() {}
 
 func (m *Response_ReadFile) GetSize_() uint64 {
-	if m != nil && m.Size_ != nil {
-		return *m.Size_
+	if m != nil {
+		return m.Size_
 	}
 	return 0
 }
@@ -1230,31 +1230,13 @@ func (this *Call_ReadFile) VerboseEqual(that interface{}) error {
 	} else if this == nil {
 		return fmt.Errorf("that is type *Call_ReadFilebut is not nil && this == nil")
 	}
-	if this.Path != nil && that1.Path != nil {
-		if *this.Path != *that1.Path {
-			return fmt.Errorf("Path this(%v) Not Equal that(%v)", *this.Path, *that1.Path)
-		}
-	} else if this.Path != nil {
-		return fmt.Errorf("this.Path == nil && that.Path != nil")
-	} else if that1.Path != nil {
+	if this.Path != that1.Path {
 		return fmt.Errorf("Path this(%v) Not Equal that(%v)", this.Path, that1.Path)
 	}
-	if this.Offset != nil && that1.Offset != nil {
-		if *this.Offset != *that1.Offset {
-			return fmt.Errorf("Offset this(%v) Not Equal that(%v)", *this.Offset, *that1.Offset)
-		}
-	} else if this.Offset != nil {
-		return fmt.Errorf("this.Offset == nil && that.Offset != nil")
-	} else if that1.Offset != nil {
+	if this.Offset != that1.Offset {
 		return fmt.Errorf("Offset this(%v) Not Equal that(%v)", this.Offset, that1.Offset)
 	}
-	if this.Length != nil && that1.Length != nil {
-		if *this.Length != *that1.Length {
-			return fmt.Errorf("Length this(%v) Not Equal that(%v)", *this.Length, *that1.Length)
-		}
-	} else if this.Length != nil {
-		return fmt.Errorf("this.Length == nil && that.Length != nil")
-	} else if that1.Length != nil {
+	if this.Length != that1.Length {
 		return fmt.Errorf("Length this(%v) Not Equal that(%v)", this.Length, that1.Length)
 	}
 	return nil
@@ -1279,31 +1261,13 @@ func (this *Call_ReadFile) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Path != nil && that1.Path != nil {
-		if *this.Path != *that1.Path {
-			return false
-		}
-	} else if this.Path != nil {
-		return false
-	} else if that1.Path != nil {
+	if this.Path != that1.Path {
 		return false
 	}
-	if this.Offset != nil && that1.Offset != nil {
-		if *this.Offset != *that1.Offset {
-			return false
-		}
-	} else if this.Offset != nil {
-		return false
-	} else if that1.Offset != nil {
+	if this.Offset != that1.Offset {
 		return false
 	}
-	if this.Length != nil && that1.Length != nil {
-		if *this.Length != *that1.Length {
-			return false
-		}
-	} else if this.Length != nil {
-		return false
-	} else if that1.Length != nil {
+	if this.Length != that1.Length {
 		return false
 	}
 	return true
@@ -1984,13 +1948,7 @@ func (this *Response_ReadFile) VerboseEqual(that interface{}) error {
 	} else if this == nil {
 		return fmt.Errorf("that is type *Response_ReadFilebut is not nil && this == nil")
 	}
-	if this.Size_ != nil && that1.Size_ != nil {
-		if *this.Size_ != *that1.Size_ {
-			return fmt.Errorf("Size_ this(%v) Not Equal that(%v)", *this.Size_, *that1.Size_)
-		}
-	} else if this.Size_ != nil {
-		return fmt.Errorf("this.Size_ == nil && that.Size_ != nil")
-	} else if that1.Size_ != nil {
+	if this.Size_ != that1.Size_ {
 		return fmt.Errorf("Size_ this(%v) Not Equal that(%v)", this.Size_, that1.Size_)
 	}
 	if !bytes.Equal(this.Data, that1.Data) {
@@ -2018,13 +1976,7 @@ func (this *Response_ReadFile) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Size_ != nil && that1.Size_ != nil {
-		if *this.Size_ != *that1.Size_ {
-			return false
-		}
-	} else if this.Size_ != nil {
-		return false
-	} else if that1.Size_ != nil {
+	if this.Size_ != that1.Size_ {
 		return false
 	}
 	if !bytes.Equal(this.Data, that1.Data) {
@@ -2762,15 +2714,9 @@ func (this *Call_ReadFile) GoString() string {
 	}
 	s := make([]string, 0, 7)
 	s = append(s, "&agent.Call_ReadFile{")
-	if this.Path != nil {
-		s = append(s, "Path: "+valueToGoStringAgent(this.Path, "string")+",\n")
-	}
-	if this.Offset != nil {
-		s = append(s, "Offset: "+valueToGoStringAgent(this.Offset, "uint64")+",\n")
-	}
-	if this.Length != nil {
-		s = append(s, "Length: "+valueToGoStringAgent(this.Length, "uint64")+",\n")
-	}
+	s = append(s, "Path: "+fmt.Sprintf("%#v", this.Path)+",\n")
+	s = append(s, "Offset: "+fmt.Sprintf("%#v", this.Offset)+",\n")
+	s = append(s, "Length: "+fmt.Sprintf("%#v", this.Length)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -2945,12 +2891,8 @@ func (this *Response_ReadFile) GoString() string {
 	}
 	s := make([]string, 0, 6)
 	s = append(s, "&agent.Response_ReadFile{")
-	if this.Size_ != nil {
-		s = append(s, "Size_: "+valueToGoStringAgent(this.Size_, "uint64")+",\n")
-	}
-	if this.Data != nil {
-		s = append(s, "Data: "+valueToGoStringAgent(this.Data, "byte")+",\n")
-	}
+	s = append(s, "Size_: "+fmt.Sprintf("%#v", this.Size_)+",\n")
+	s = append(s, "Data: "+fmt.Sprintf("%#v", this.Data)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -3325,26 +3267,16 @@ func (m *Call_ReadFile) MarshalTo(data []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Path == nil {
-		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("path")
-	} else {
-		data[i] = 0xa
-		i++
-		i = encodeVarintAgent(data, i, uint64(len(*m.Path)))
-		i += copy(data[i:], *m.Path)
-	}
-	if m.Offset == nil {
-		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("offset")
-	} else {
-		data[i] = 0x10
-		i++
-		i = encodeVarintAgent(data, i, uint64(*m.Offset))
-	}
-	if m.Length != nil {
-		data[i] = 0x18
-		i++
-		i = encodeVarintAgent(data, i, uint64(*m.Length))
-	}
+	data[i] = 0xa
+	i++
+	i = encodeVarintAgent(data, i, uint64(len(m.Path)))
+	i += copy(data[i:], m.Path)
+	data[i] = 0x10
+	i++
+	i = encodeVarintAgent(data, i, uint64(m.Offset))
+	data[i] = 0x18
+	i++
+	i = encodeVarintAgent(data, i, uint64(m.Length))
 	return i, nil
 }
 
@@ -3801,16 +3733,10 @@ func (m *Response_ReadFile) MarshalTo(data []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Size_ == nil {
-		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("size")
-	} else {
-		data[i] = 0x8
-		i++
-		i = encodeVarintAgent(data, i, uint64(*m.Size_))
-	}
-	if m.Data == nil {
-		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("data")
-	} else {
+	data[i] = 0x8
+	i++
+	i = encodeVarintAgent(data, i, uint64(m.Size_))
+	if m.Data != nil {
 		data[i] = 0x12
 		i++
 		i = encodeVarintAgent(data, i, uint64(len(m.Data)))
@@ -4314,14 +4240,9 @@ func NewPopulatedCall_ListFiles(r randyAgent, easy bool) *Call_ListFiles {
 
 func NewPopulatedCall_ReadFile(r randyAgent, easy bool) *Call_ReadFile {
 	this := &Call_ReadFile{}
-	v4 := randStringAgent(r)
-	this.Path = &v4
-	v5 := uint64(uint64(r.Uint32()))
-	this.Offset = &v5
-	if r.Intn(10) != 0 {
-		v6 := uint64(uint64(r.Uint32()))
-		this.Length = &v6
-	}
+	this.Path = randStringAgent(r)
+	this.Offset = uint64(uint64(r.Uint32()))
+	this.Length = uint64(uint64(r.Uint32()))
 	if !easy && r.Intn(10) != 0 {
 	}
 	return this
@@ -4360,8 +4281,8 @@ func NewPopulatedCall_KillNestedContainer(r randyAgent, easy bool) *Call_KillNes
 func NewPopulatedResponse(r randyAgent, easy bool) *Response {
 	this := &Response{}
 	if r.Intn(10) != 0 {
-		v7 := Response_Type([]int32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}[r.Intn(14)])
-		this.Type = &v7
+		v4 := Response_Type([]int32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}[r.Intn(14)])
+		this.Type = &v4
 	}
 	if r.Intn(10) != 0 {
 		this.GetHealth = NewPopulatedResponse_GetHealth(r, easy)
@@ -4409,8 +4330,8 @@ func NewPopulatedResponse(r randyAgent, easy bool) *Response {
 
 func NewPopulatedResponse_GetHealth(r randyAgent, easy bool) *Response_GetHealth {
 	this := &Response_GetHealth{}
-	v8 := bool(bool(r.Intn(2) == 0))
-	this.Healthy = &v8
+	v5 := bool(bool(r.Intn(2) == 0))
+	this.Healthy = &v5
 	if !easy && r.Intn(10) != 0 {
 	}
 	return this
@@ -4419,9 +4340,9 @@ func NewPopulatedResponse_GetHealth(r randyAgent, easy bool) *Response_GetHealth
 func NewPopulatedResponse_GetFlags(r randyAgent, easy bool) *Response_GetFlags {
 	this := &Response_GetFlags{}
 	if r.Intn(10) != 0 {
-		v9 := r.Intn(10)
-		this.Flags = make([]*mesos.Flag, v9)
-		for i := 0; i < v9; i++ {
+		v6 := r.Intn(10)
+		this.Flags = make([]*mesos.Flag, v6)
+		for i := 0; i < v6; i++ {
 			this.Flags[i] = mesos.NewPopulatedFlag(r, easy)
 		}
 	}
@@ -4441,9 +4362,9 @@ func NewPopulatedResponse_GetVersion(r randyAgent, easy bool) *Response_GetVersi
 func NewPopulatedResponse_GetMetrics(r randyAgent, easy bool) *Response_GetMetrics {
 	this := &Response_GetMetrics{}
 	if r.Intn(10) != 0 {
-		v10 := r.Intn(10)
-		this.Metrics = make([]*mesos.Metric, v10)
-		for i := 0; i < v10; i++ {
+		v7 := r.Intn(10)
+		this.Metrics = make([]*mesos.Metric, v7)
+		for i := 0; i < v7; i++ {
 			this.Metrics[i] = mesos.NewPopulatedMetric(r, easy)
 		}
 	}
@@ -4454,8 +4375,8 @@ func NewPopulatedResponse_GetMetrics(r randyAgent, easy bool) *Response_GetMetri
 
 func NewPopulatedResponse_GetLoggingLevel(r randyAgent, easy bool) *Response_GetLoggingLevel {
 	this := &Response_GetLoggingLevel{}
-	v11 := uint32(r.Uint32())
-	this.Level = &v11
+	v8 := uint32(r.Uint32())
+	this.Level = &v8
 	if !easy && r.Intn(10) != 0 {
 	}
 	return this
@@ -4464,9 +4385,9 @@ func NewPopulatedResponse_GetLoggingLevel(r randyAgent, easy bool) *Response_Get
 func NewPopulatedResponse_ListFiles(r randyAgent, easy bool) *Response_ListFiles {
 	this := &Response_ListFiles{}
 	if r.Intn(10) != 0 {
-		v12 := r.Intn(10)
-		this.FileInfos = make([]*mesos.FileInfo, v12)
-		for i := 0; i < v12; i++ {
+		v9 := r.Intn(10)
+		this.FileInfos = make([]*mesos.FileInfo, v9)
+		for i := 0; i < v9; i++ {
 			this.FileInfos[i] = mesos.NewPopulatedFileInfo(r, easy)
 		}
 	}
@@ -4477,11 +4398,10 @@ func NewPopulatedResponse_ListFiles(r randyAgent, easy bool) *Response_ListFiles
 
 func NewPopulatedResponse_ReadFile(r randyAgent, easy bool) *Response_ReadFile {
 	this := &Response_ReadFile{}
-	v13 := uint64(uint64(r.Uint32()))
-	this.Size_ = &v13
-	v14 := r.Intn(100)
-	this.Data = make([]byte, v14)
-	for i := 0; i < v14; i++ {
+	this.Size_ = uint64(uint64(r.Uint32()))
+	v10 := r.Intn(100)
+	this.Data = make([]byte, v10)
+	for i := 0; i < v10; i++ {
 		this.Data[i] = byte(r.Intn(256))
 	}
 	if !easy && r.Intn(10) != 0 {
@@ -4508,9 +4428,9 @@ func NewPopulatedResponse_GetState(r randyAgent, easy bool) *Response_GetState {
 func NewPopulatedResponse_GetContainers(r randyAgent, easy bool) *Response_GetContainers {
 	this := &Response_GetContainers{}
 	if r.Intn(10) != 0 {
-		v15 := r.Intn(10)
-		this.Containers = make([]*Response_GetContainers_Container, v15)
-		for i := 0; i < v15; i++ {
+		v11 := r.Intn(10)
+		this.Containers = make([]*Response_GetContainers_Container, v11)
+		for i := 0; i < v11; i++ {
 			this.Containers[i] = NewPopulatedResponse_GetContainers_Container(r, easy)
 		}
 	}
@@ -4523,8 +4443,8 @@ func NewPopulatedResponse_GetContainers_Container(r randyAgent, easy bool) *Resp
 	this := &Response_GetContainers_Container{}
 	this.FrameworkId = mesos.NewPopulatedFrameworkID(r, easy)
 	this.ExecutorId = mesos.NewPopulatedExecutorID(r, easy)
-	v16 := randStringAgent(r)
-	this.ExecutorName = &v16
+	v12 := randStringAgent(r)
+	this.ExecutorName = &v12
 	this.ContainerId = mesos.NewPopulatedContainerID(r, easy)
 	if r.Intn(10) != 0 {
 		this.ContainerStatus = mesos.NewPopulatedContainerStatus(r, easy)
@@ -4540,16 +4460,16 @@ func NewPopulatedResponse_GetContainers_Container(r randyAgent, easy bool) *Resp
 func NewPopulatedResponse_GetFrameworks(r randyAgent, easy bool) *Response_GetFrameworks {
 	this := &Response_GetFrameworks{}
 	if r.Intn(10) != 0 {
-		v17 := r.Intn(10)
-		this.Frameworks = make([]*Response_GetFrameworks_Framework, v17)
-		for i := 0; i < v17; i++ {
+		v13 := r.Intn(10)
+		this.Frameworks = make([]*Response_GetFrameworks_Framework, v13)
+		for i := 0; i < v13; i++ {
 			this.Frameworks[i] = NewPopulatedResponse_GetFrameworks_Framework(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v18 := r.Intn(10)
-		this.CompletedFrameworks = make([]*Response_GetFrameworks_Framework, v18)
-		for i := 0; i < v18; i++ {
+		v14 := r.Intn(10)
+		this.CompletedFrameworks = make([]*Response_GetFrameworks_Framework, v14)
+		for i := 0; i < v14; i++ {
 			this.CompletedFrameworks[i] = NewPopulatedResponse_GetFrameworks_Framework(r, easy)
 		}
 	}
@@ -4569,16 +4489,16 @@ func NewPopulatedResponse_GetFrameworks_Framework(r randyAgent, easy bool) *Resp
 func NewPopulatedResponse_GetExecutors(r randyAgent, easy bool) *Response_GetExecutors {
 	this := &Response_GetExecutors{}
 	if r.Intn(10) != 0 {
-		v19 := r.Intn(10)
-		this.Executors = make([]*Response_GetExecutors_Executor, v19)
-		for i := 0; i < v19; i++ {
+		v15 := r.Intn(10)
+		this.Executors = make([]*Response_GetExecutors_Executor, v15)
+		for i := 0; i < v15; i++ {
 			this.Executors[i] = NewPopulatedResponse_GetExecutors_Executor(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v20 := r.Intn(10)
-		this.CompletedExecutors = make([]*Response_GetExecutors_Executor, v20)
-		for i := 0; i < v20; i++ {
+		v16 := r.Intn(10)
+		this.CompletedExecutors = make([]*Response_GetExecutors_Executor, v16)
+		for i := 0; i < v16; i++ {
 			this.CompletedExecutors[i] = NewPopulatedResponse_GetExecutors_Executor(r, easy)
 		}
 	}
@@ -4598,37 +4518,37 @@ func NewPopulatedResponse_GetExecutors_Executor(r randyAgent, easy bool) *Respon
 func NewPopulatedResponse_GetTasks(r randyAgent, easy bool) *Response_GetTasks {
 	this := &Response_GetTasks{}
 	if r.Intn(10) != 0 {
-		v21 := r.Intn(10)
-		this.PendingTasks = make([]*mesos.Task, v21)
-		for i := 0; i < v21; i++ {
+		v17 := r.Intn(10)
+		this.PendingTasks = make([]*mesos.Task, v17)
+		for i := 0; i < v17; i++ {
 			this.PendingTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v22 := r.Intn(10)
-		this.QueuedTasks = make([]*mesos.Task, v22)
-		for i := 0; i < v22; i++ {
+		v18 := r.Intn(10)
+		this.QueuedTasks = make([]*mesos.Task, v18)
+		for i := 0; i < v18; i++ {
 			this.QueuedTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v23 := r.Intn(10)
-		this.LaunchedTasks = make([]*mesos.Task, v23)
-		for i := 0; i < v23; i++ {
+		v19 := r.Intn(10)
+		this.LaunchedTasks = make([]*mesos.Task, v19)
+		for i := 0; i < v19; i++ {
 			this.LaunchedTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v24 := r.Intn(10)
-		this.TerminatedTasks = make([]*mesos.Task, v24)
-		for i := 0; i < v24; i++ {
+		v20 := r.Intn(10)
+		this.TerminatedTasks = make([]*mesos.Task, v20)
+		for i := 0; i < v20; i++ {
 			this.TerminatedTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v25 := r.Intn(10)
-		this.CompletedTasks = make([]*mesos.Task, v25)
-		for i := 0; i < v25; i++ {
+		v21 := r.Intn(10)
+		this.CompletedTasks = make([]*mesos.Task, v21)
+		for i := 0; i < v21; i++ {
 			this.CompletedTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
@@ -4640,11 +4560,11 @@ func NewPopulatedResponse_GetTasks(r randyAgent, easy bool) *Response_GetTasks {
 func NewPopulatedResponse_WaitNestedContainer(r randyAgent, easy bool) *Response_WaitNestedContainer {
 	this := &Response_WaitNestedContainer{}
 	if r.Intn(10) != 0 {
-		v26 := int32(r.Int31())
+		v22 := int32(r.Int31())
 		if r.Intn(2) == 0 {
-			v26 *= -1
+			v22 *= -1
 		}
-		this.ExitStatus = &v26
+		this.ExitStatus = &v22
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -4670,9 +4590,9 @@ func randUTF8RuneAgent(r randyAgent) rune {
 	return rune(ru + 61)
 }
 func randStringAgent(r randyAgent) string {
-	v27 := r.Intn(100)
-	tmps := make([]rune, v27)
-	for i := 0; i < v27; i++ {
+	v23 := r.Intn(100)
+	tmps := make([]rune, v23)
+	for i := 0; i < v23; i++ {
 		tmps[i] = randUTF8RuneAgent(r)
 	}
 	return string(tmps)
@@ -4694,11 +4614,11 @@ func randFieldAgent(data []byte, r randyAgent, fieldNumber int, wire int) []byte
 	switch wire {
 	case 0:
 		data = encodeVarintPopulateAgent(data, uint64(key))
-		v28 := r.Int63()
+		v24 := r.Int63()
 		if r.Intn(2) == 0 {
-			v28 *= -1
+			v24 *= -1
 		}
-		data = encodeVarintPopulateAgent(data, uint64(v28))
+		data = encodeVarintPopulateAgent(data, uint64(v24))
 	case 1:
 		data = encodeVarintPopulateAgent(data, uint64(key))
 		data = append(data, byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)))
@@ -4796,16 +4716,10 @@ func (m *Call_ListFiles) Size() (n int) {
 func (m *Call_ReadFile) Size() (n int) {
 	var l int
 	_ = l
-	if m.Path != nil {
-		l = len(*m.Path)
-		n += 1 + l + sovAgent(uint64(l))
-	}
-	if m.Offset != nil {
-		n += 1 + sovAgent(uint64(*m.Offset))
-	}
-	if m.Length != nil {
-		n += 1 + sovAgent(uint64(*m.Length))
-	}
+	l = len(m.Path)
+	n += 1 + l + sovAgent(uint64(l))
+	n += 1 + sovAgent(uint64(m.Offset))
+	n += 1 + sovAgent(uint64(m.Length))
 	return n
 }
 
@@ -4975,9 +4889,7 @@ func (m *Response_ListFiles) Size() (n int) {
 func (m *Response_ReadFile) Size() (n int) {
 	var l int
 	_ = l
-	if m.Size_ != nil {
-		n += 1 + sovAgent(uint64(*m.Size_))
-	}
+	n += 1 + sovAgent(uint64(m.Size_))
 	if m.Data != nil {
 		l = len(m.Data)
 		n += 1 + l + sovAgent(uint64(l))
@@ -5212,9 +5124,9 @@ func (this *Call_ReadFile) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&Call_ReadFile{`,
-		`Path:` + valueToStringAgent(this.Path) + `,`,
-		`Offset:` + valueToStringAgent(this.Offset) + `,`,
-		`Length:` + valueToStringAgent(this.Length) + `,`,
+		`Path:` + fmt.Sprintf("%v", this.Path) + `,`,
+		`Offset:` + fmt.Sprintf("%v", this.Offset) + `,`,
+		`Length:` + fmt.Sprintf("%v", this.Length) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -5339,8 +5251,8 @@ func (this *Response_ReadFile) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&Response_ReadFile{`,
-		`Size_:` + valueToStringAgent(this.Size_) + `,`,
-		`Data:` + valueToStringAgent(this.Data) + `,`,
+		`Size_:` + fmt.Sprintf("%v", this.Size_) + `,`,
+		`Data:` + fmt.Sprintf("%v", this.Data) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -6094,15 +6006,14 @@ func (m *Call_ReadFile) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Path = &s
+			m.Path = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 			hasFields[0] |= uint64(0x00000001)
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Offset", wireType)
 			}
-			var v uint64
+			m.Offset = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAgent
@@ -6112,18 +6023,17 @@ func (m *Call_ReadFile) Unmarshal(data []byte) error {
 				}
 				b := data[iNdEx]
 				iNdEx++
-				v |= (uint64(b) & 0x7F) << shift
+				m.Offset |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Offset = &v
 			hasFields[0] |= uint64(0x00000002)
 		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Length", wireType)
 			}
-			var v uint64
+			m.Length = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAgent
@@ -6133,12 +6043,11 @@ func (m *Call_ReadFile) Unmarshal(data []byte) error {
 				}
 				b := data[iNdEx]
 				iNdEx++
-				v |= (uint64(b) & 0x7F) << shift
+				m.Length |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Length = &v
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAgent(data[iNdEx:])
@@ -7511,7 +7420,7 @@ func (m *Response_ReadFile) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Size_", wireType)
 			}
-			var v uint64
+			m.Size_ = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAgent
@@ -7521,12 +7430,11 @@ func (m *Response_ReadFile) Unmarshal(data []byte) error {
 				}
 				b := data[iNdEx]
 				iNdEx++
-				v |= (uint64(b) & 0x7F) << shift
+				m.Size_ |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Size_ = &v
 			hasFields[0] |= uint64(0x00000001)
 		case 2:
 			if wireType != 2 {

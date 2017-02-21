@@ -103,14 +103,14 @@ message Call {
   // Reads data from a file.
   message ReadFile {
     // The path of file.
-    required string path = 1;
+    required string path = 1 [(gogoproto.nullable) = false];
 
     // Initial offset in file to start reading from.
-    required uint64 offset = 2;
+    required uint64 offset = 2 [(gogoproto.nullable) = false];
 
     // The maximum number of bytes to read. The read length is capped at 16
     // memory pages.
-    optional uint64 length = 3;
+    optional uint64 length = 3 [(gogoproto.nullable) = false];
   }
 
   // Launches a nested container within an executor's tree of containers.
@@ -204,9 +204,9 @@ message Response {
   // Contains the file data.
   message ReadFile {
     // The size of file (in bytes).
-    required uint64 size = 1;
+    required uint64 size = 1 [(gogoproto.nullable) = false];
 
-    required bytes data = 2;
+    required bytes data = 2 [(gogoproto.nullable) = false];
   }
 
   // Contains full state of the agent i.e. information about the tasks,
