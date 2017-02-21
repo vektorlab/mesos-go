@@ -69,7 +69,7 @@ type ProtocolError int
 func (pe ProtocolError) Error() string { return fmt.Sprintf("Unexpected Mesos HTTP error: %d", int(pe)) }
 
 const (
-	debug = true // TODO(jdef) kill me at some point
+	debug = false // TODO(jdef) kill me at some point
 
 	indexRequestContentType  = 0 // index into Client.codec.MediaTypes for request content type
 	indexResponseContentType = 1 // index into Client.codec.MediaTypes for expected response content type
