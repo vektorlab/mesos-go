@@ -127,6 +127,17 @@ func OpLaunch(ti ...mesos.TaskInfo) mesos.Offer_Operation {
 	}
 }
 
+// OpLaunchGroup returns a launch operation builder for the task group
+func OpLaunchGroup(ex mesos.ExecutorInfo, tg mesos.TaskGroupInfo) mesos.Offer_Operation {
+	return mesos.Offer_Operation{
+		Type: mesos.LAUNCH_GROUP.Enum(),
+		LaunchGroup: &mesos.Offer_Operation_LaunchGroup{
+			TaskGroup: tg,
+			Executor:  ex,
+		},
+	}
+}
+
 func OpReserve(rs ...mesos.Resource) mesos.Offer_Operation {
 	return mesos.Offer_Operation{
 		Type: mesos.RESERVE.Enum(),

@@ -22436,38 +22436,26 @@ func (mj *Offer_Operation_LaunchGroup) MarshalJSONBuf(buf fflib.EncodingBuffer) 
 	var obj []byte
 	_ = obj
 	_ = err
-	buf.WriteString(`{ `)
-	if mj.Executor != nil {
-		if true {
-			buf.WriteString(`"executor":`)
+	buf.WriteString(`{"executor":`)
 
-			{
+	{
 
-				err = mj.Executor.MarshalJSONBuf(buf)
-				if err != nil {
-					return err
-				}
-
-			}
-			buf.WriteByte(',')
+		err = mj.Executor.MarshalJSONBuf(buf)
+		if err != nil {
+			return err
 		}
+
 	}
-	if mj.TaskGroup != nil {
-		if true {
-			buf.WriteString(`"task_group":`)
+	buf.WriteString(`,"task_group":`)
 
-			{
+	{
 
-				err = mj.TaskGroup.MarshalJSONBuf(buf)
-				if err != nil {
-					return err
-				}
-
-			}
-			buf.WriteByte(',')
+		err = mj.TaskGroup.MarshalJSONBuf(buf)
+		if err != nil {
+			return err
 		}
+
 	}
-	buf.Rewind(1)
 	buf.WriteByte('}')
 	return nil
 }
@@ -22618,14 +22606,8 @@ handle_Executor:
 	{
 		if tok == fflib.FFTok_null {
 
-			uj.Executor = nil
-
 			state = fflib.FFParse_after_value
 			goto mainparse
-		}
-
-		if uj.Executor == nil {
-			uj.Executor = new(ExecutorInfo)
 		}
 
 		err = uj.Executor.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
@@ -22645,14 +22627,8 @@ handle_TaskGroup:
 	{
 		if tok == fflib.FFTok_null {
 
-			uj.TaskGroup = nil
-
 			state = fflib.FFParse_after_value
 			goto mainparse
-		}
-
-		if uj.TaskGroup == nil {
-			uj.TaskGroup = new(TaskGroupInfo)
 		}
 
 		err = uj.TaskGroup.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)

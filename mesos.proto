@@ -1322,8 +1322,8 @@ message Offer {
     // TODO(vinod): Any volumes set on executor could be used by a
     // task by explicitly setting `Volume.source` in its resources.
     message LaunchGroup {
-      required ExecutorInfo executor = 1;
-      required TaskGroupInfo task_group = 2;
+      required ExecutorInfo executor = 1 [(gogoproto.nullable) = false];
+      required TaskGroupInfo task_group = 2 [(gogoproto.nullable) = false];
     }
 
     message Reserve {
