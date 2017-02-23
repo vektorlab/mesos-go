@@ -206,7 +206,7 @@ message Response {
     // The size of file (in bytes).
     required uint64 size = 1 [(gogoproto.nullable) = false];
 
-    required bytes data = 2 [(gogoproto.nullable) = false];
+    required bytes data = 2;
   }
 
   // Contains full state of the agent i.e. information about the tasks,

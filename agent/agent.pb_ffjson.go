@@ -7851,20 +7851,25 @@ func (mj *Response_ReadFile) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	var obj []byte
 	_ = obj
 	_ = err
-	buf.WriteString(`{"size":`)
+	buf.WriteString(`{ "size":`)
 	fflib.FormatBits2(buf, uint64(mj.Size_), 10, false)
-	buf.WriteString(`,"data":`)
-	if mj.Data != nil {
-		buf.WriteString(`"`)
-		{
-			enc := base64.NewEncoder(base64.StdEncoding, buf)
-			enc.Write(reflect.Indirect(reflect.ValueOf(mj.Data)).Bytes())
-			enc.Close()
+	buf.WriteByte(',')
+	if len(mj.Data) != 0 {
+		buf.WriteString(`"data":`)
+		if mj.Data != nil {
+			buf.WriteString(`"`)
+			{
+				enc := base64.NewEncoder(base64.StdEncoding, buf)
+				enc.Write(reflect.Indirect(reflect.ValueOf(mj.Data)).Bytes())
+				enc.Close()
+			}
+			buf.WriteString(`"`)
+		} else {
+			buf.WriteString(`null`)
 		}
-		buf.WriteString(`"`)
-	} else {
-		buf.WriteString(`null`)
+		buf.WriteByte(',')
 	}
+	buf.Rewind(1)
 	buf.WriteByte('}')
 	return nil
 }

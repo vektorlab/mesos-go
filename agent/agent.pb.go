@@ -639,7 +639,7 @@ func (m *Response_ListFiles) GetFileInfos() []*mesos.FileInfo {
 type Response_ReadFile struct {
 	// The size of file (in bytes).
 	Size_ uint64 `protobuf:"varint,1,req,name=size" json:"size"`
-	Data  []byte `protobuf:"bytes,2,req,name=data" json:"data"`
+	Data  []byte `protobuf:"bytes,2,req,name=data" json:"data,omitempty"`
 }
 
 func (m *Response_ReadFile) Reset()      { *m = Response_ReadFile{} }
@@ -2892,7 +2892,9 @@ func (this *Response_ReadFile) GoString() string {
 	s := make([]string, 0, 6)
 	s = append(s, "&agent.Response_ReadFile{")
 	s = append(s, "Size_: "+fmt.Sprintf("%#v", this.Size_)+",\n")
-	s = append(s, "Data: "+fmt.Sprintf("%#v", this.Data)+",\n")
+	if this.Data != nil {
+		s = append(s, "Data: "+valueToGoStringAgent(this.Data, "byte")+",\n")
+	}
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -3736,7 +3738,9 @@ func (m *Response_ReadFile) MarshalTo(data []byte) (int, error) {
 	data[i] = 0x8
 	i++
 	i = encodeVarintAgent(data, i, uint64(m.Size_))
-	if m.Data != nil {
+	if m.Data == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("data")
+	} else {
 		data[i] = 0x12
 		i++
 		i = encodeVarintAgent(data, i, uint64(len(m.Data)))
@@ -5252,7 +5256,7 @@ func (this *Response_ReadFile) String() string {
 	}
 	s := strings.Join([]string{`&Response_ReadFile{`,
 		`Size_:` + fmt.Sprintf("%v", this.Size_) + `,`,
-		`Data:` + fmt.Sprintf("%v", this.Data) + `,`,
+		`Data:` + valueToStringAgent(this.Data) + `,`,
 		`}`,
 	}, "")
 	return s

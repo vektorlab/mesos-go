@@ -1629,11 +1629,11 @@ message TaskStatus {
 
   required TaskID task_id = 1 [(gogoproto.nullable) = false, (gogoproto.customname) = "TaskID"];
   required TaskState state = 2;
-  optional string message = 4; // Possible message explaining state.
+  optional string message = 4 [(gogoproto.nullable) = false]; // Possible message explaining state.
   optional Source source = 9;
-  optional Reason reason = 10;
+  optional Reason reason = 10 [(gogoproto.nullable) = false];
   optional bytes data = 3;
-  optional AgentID agent_id = 5 [(gogoproto.customname) = "AgentID"];
+  optional AgentID agent_id = 5 [(gogoproto.nullable) = false, (gogoproto.customname) = "AgentID"];
   optional ExecutorID executor_id = 7 [(gogoproto.nullable) = false, (gogoproto.customname) = "ExecutorID"]; // TODO(benh): Use in master/agent.
   optional double timestamp = 6;
 

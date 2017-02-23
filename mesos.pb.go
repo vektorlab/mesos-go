@@ -5121,11 +5121,11 @@ func (m *Task) GetUser() string {
 type TaskStatus struct {
 	TaskID     TaskID             `protobuf:"bytes,1,req,name=task_id" json:"task_id"`
 	State      *TaskState         `protobuf:"varint,2,req,name=state,enum=mesos.TaskState" json:"state,omitempty"`
-	Message    *string            `protobuf:"bytes,4,opt,name=message" json:"message,omitempty"`
+	Message    string             `protobuf:"bytes,4,opt,name=message" json:"message"`
 	Source     *TaskStatus_Source `protobuf:"varint,9,opt,name=source,enum=mesos.TaskStatus_Source" json:"source,omitempty"`
-	Reason     *TaskStatus_Reason `protobuf:"varint,10,opt,name=reason,enum=mesos.TaskStatus_Reason" json:"reason,omitempty"`
+	Reason     TaskStatus_Reason  `protobuf:"varint,10,opt,name=reason,enum=mesos.TaskStatus_Reason" json:"reason"`
 	Data       []byte             `protobuf:"bytes,3,opt,name=data" json:"data,omitempty"`
-	AgentID    *AgentID           `protobuf:"bytes,5,opt,name=agent_id" json:"agent_id,omitempty"`
+	AgentID    AgentID            `protobuf:"bytes,5,opt,name=agent_id" json:"agent_id"`
 	ExecutorID ExecutorID         `protobuf:"bytes,7,opt,name=executor_id" json:"executor_id"`
 	Timestamp  *float64           `protobuf:"fixed64,6,opt,name=timestamp" json:"timestamp,omitempty"`
 	// Statuses that are delivered reliably to the scheduler will
@@ -5177,8 +5177,8 @@ func (m *TaskStatus) GetState() TaskState {
 }
 
 func (m *TaskStatus) GetMessage() string {
-	if m != nil && m.Message != nil {
-		return *m.Message
+	if m != nil {
+		return m.Message
 	}
 	return ""
 }
@@ -5191,8 +5191,8 @@ func (m *TaskStatus) GetSource() TaskStatus_Source {
 }
 
 func (m *TaskStatus) GetReason() TaskStatus_Reason {
-	if m != nil && m.Reason != nil {
-		return *m.Reason
+	if m != nil {
+		return m.Reason
 	}
 	return REASON_COMMAND_EXECUTOR_FAILED
 }
@@ -5204,11 +5204,11 @@ func (m *TaskStatus) GetData() []byte {
 	return nil
 }
 
-func (m *TaskStatus) GetAgentID() *AgentID {
+func (m *TaskStatus) GetAgentID() AgentID {
 	if m != nil {
 		return m.AgentID
 	}
-	return nil
+	return AgentID{}
 }
 
 func (m *TaskStatus) GetExecutorID() ExecutorID {
@@ -14764,13 +14764,7 @@ func (this *TaskStatus) VerboseEqual(that interface{}) error {
 	} else if that1.State != nil {
 		return fmt.Errorf("State this(%v) Not Equal that(%v)", this.State, that1.State)
 	}
-	if this.Message != nil && that1.Message != nil {
-		if *this.Message != *that1.Message {
-			return fmt.Errorf("Message this(%v) Not Equal that(%v)", *this.Message, *that1.Message)
-		}
-	} else if this.Message != nil {
-		return fmt.Errorf("this.Message == nil && that.Message != nil")
-	} else if that1.Message != nil {
+	if this.Message != that1.Message {
 		return fmt.Errorf("Message this(%v) Not Equal that(%v)", this.Message, that1.Message)
 	}
 	if this.Source != nil && that1.Source != nil {
@@ -14782,19 +14776,13 @@ func (this *TaskStatus) VerboseEqual(that interface{}) error {
 	} else if that1.Source != nil {
 		return fmt.Errorf("Source this(%v) Not Equal that(%v)", this.Source, that1.Source)
 	}
-	if this.Reason != nil && that1.Reason != nil {
-		if *this.Reason != *that1.Reason {
-			return fmt.Errorf("Reason this(%v) Not Equal that(%v)", *this.Reason, *that1.Reason)
-		}
-	} else if this.Reason != nil {
-		return fmt.Errorf("this.Reason == nil && that.Reason != nil")
-	} else if that1.Reason != nil {
+	if this.Reason != that1.Reason {
 		return fmt.Errorf("Reason this(%v) Not Equal that(%v)", this.Reason, that1.Reason)
 	}
 	if !bytes.Equal(this.Data, that1.Data) {
 		return fmt.Errorf("Data this(%v) Not Equal that(%v)", this.Data, that1.Data)
 	}
-	if !this.AgentID.Equal(that1.AgentID) {
+	if !this.AgentID.Equal(&that1.AgentID) {
 		return fmt.Errorf("AgentID this(%v) Not Equal that(%v)", this.AgentID, that1.AgentID)
 	}
 	if !this.ExecutorID.Equal(&that1.ExecutorID) {
@@ -14864,13 +14852,7 @@ func (this *TaskStatus) Equal(that interface{}) bool {
 	} else if that1.State != nil {
 		return false
 	}
-	if this.Message != nil && that1.Message != nil {
-		if *this.Message != *that1.Message {
-			return false
-		}
-	} else if this.Message != nil {
-		return false
-	} else if that1.Message != nil {
+	if this.Message != that1.Message {
 		return false
 	}
 	if this.Source != nil && that1.Source != nil {
@@ -14882,19 +14864,13 @@ func (this *TaskStatus) Equal(that interface{}) bool {
 	} else if that1.Source != nil {
 		return false
 	}
-	if this.Reason != nil && that1.Reason != nil {
-		if *this.Reason != *that1.Reason {
-			return false
-		}
-	} else if this.Reason != nil {
-		return false
-	} else if that1.Reason != nil {
+	if this.Reason != that1.Reason {
 		return false
 	}
 	if !bytes.Equal(this.Data, that1.Data) {
 		return false
 	}
-	if !this.AgentID.Equal(that1.AgentID) {
+	if !this.AgentID.Equal(&that1.AgentID) {
 		return false
 	}
 	if !this.ExecutorID.Equal(&that1.ExecutorID) {
@@ -19660,21 +19636,15 @@ func (this *TaskStatus) GoString() string {
 	if this.State != nil {
 		s = append(s, "State: "+valueToGoStringMesos(this.State, "mesos.TaskState")+",\n")
 	}
-	if this.Message != nil {
-		s = append(s, "Message: "+valueToGoStringMesos(this.Message, "string")+",\n")
-	}
+	s = append(s, "Message: "+fmt.Sprintf("%#v", this.Message)+",\n")
 	if this.Source != nil {
 		s = append(s, "Source: "+valueToGoStringMesos(this.Source, "mesos.TaskStatus_Source")+",\n")
 	}
-	if this.Reason != nil {
-		s = append(s, "Reason: "+valueToGoStringMesos(this.Reason, "mesos.TaskStatus_Reason")+",\n")
-	}
+	s = append(s, "Reason: "+fmt.Sprintf("%#v", this.Reason)+",\n")
 	if this.Data != nil {
 		s = append(s, "Data: "+valueToGoStringMesos(this.Data, "byte")+",\n")
 	}
-	if this.AgentID != nil {
-		s = append(s, "AgentID: "+fmt.Sprintf("%#v", this.AgentID)+",\n")
-	}
+	s = append(s, "AgentID: "+strings.Replace(this.AgentID.GoString(), `&`, ``, 1)+",\n")
 	s = append(s, "ExecutorID: "+strings.Replace(this.ExecutorID.GoString(), `&`, ``, 1)+",\n")
 	if this.Timestamp != nil {
 		s = append(s, "Timestamp: "+valueToGoStringMesos(this.Timestamp, "float64")+",\n")
@@ -24197,22 +24167,18 @@ func (m *TaskStatus) MarshalTo(data []byte) (int, error) {
 		i = encodeVarintMesos(data, i, uint64(len(m.Data)))
 		i += copy(data[i:], m.Data)
 	}
-	if m.Message != nil {
-		data[i] = 0x22
-		i++
-		i = encodeVarintMesos(data, i, uint64(len(*m.Message)))
-		i += copy(data[i:], *m.Message)
+	data[i] = 0x22
+	i++
+	i = encodeVarintMesos(data, i, uint64(len(m.Message)))
+	i += copy(data[i:], m.Message)
+	data[i] = 0x2a
+	i++
+	i = encodeVarintMesos(data, i, uint64(m.AgentID.Size()))
+	n91, err := m.AgentID.MarshalTo(data[i:])
+	if err != nil {
+		return 0, err
 	}
-	if m.AgentID != nil {
-		data[i] = 0x2a
-		i++
-		i = encodeVarintMesos(data, i, uint64(m.AgentID.Size()))
-		n91, err := m.AgentID.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n91
-	}
+	i += n91
 	if m.Timestamp != nil {
 		data[i] = 0x31
 		i++
@@ -24241,11 +24207,9 @@ func (m *TaskStatus) MarshalTo(data []byte) (int, error) {
 		i++
 		i = encodeVarintMesos(data, i, uint64(*m.Source))
 	}
-	if m.Reason != nil {
-		data[i] = 0x50
-		i++
-		i = encodeVarintMesos(data, i, uint64(*m.Reason))
-	}
+	data[i] = 0x50
+	i++
+	i = encodeVarintMesos(data, i, uint64(m.Reason))
 	if m.UUID != nil {
 		data[i] = 0x5a
 		i++
@@ -27938,13 +27902,9 @@ func NewPopulatedTaskStatus(r randyMesos, easy bool) *TaskStatus {
 			this.Data[i] = byte(r.Intn(256))
 		}
 	}
-	if r.Intn(10) != 0 {
-		v298 := randStringMesos(r)
-		this.Message = &v298
-	}
-	if r.Intn(10) != 0 {
-		this.AgentID = NewPopulatedAgentID(r, easy)
-	}
+	this.Message = randStringMesos(r)
+	v298 := NewPopulatedAgentID(r, easy)
+	this.AgentID = *v298
 	if r.Intn(10) != 0 {
 		v299 := float64(r.Float64())
 		if r.Intn(2) == 0 {
@@ -27962,14 +27922,11 @@ func NewPopulatedTaskStatus(r randyMesos, easy bool) *TaskStatus {
 		v302 := TaskStatus_Source([]int32{0, 1, 2}[r.Intn(3)])
 		this.Source = &v302
 	}
+	this.Reason = TaskStatus_Reason([]int32{0, 21, 19, 20, 8, 17, 22, 23, 24, 1, 2, 3, 4, 5, 6, 7, 9, 18, 10, 11, 12, 13, 25, 26, 14, 15, 16}[r.Intn(27)])
 	if r.Intn(10) != 0 {
-		v303 := TaskStatus_Reason([]int32{0, 21, 19, 20, 8, 17, 22, 23, 24, 1, 2, 3, 4, 5, 6, 7, 9, 18, 10, 11, 12, 13, 25, 26, 14, 15, 16}[r.Intn(27)])
-		this.Reason = &v303
-	}
-	if r.Intn(10) != 0 {
-		v304 := r.Intn(100)
-		this.UUID = make([]byte, v304)
-		for i := 0; i < v304; i++ {
+		v303 := r.Intn(100)
+		this.UUID = make([]byte, v303)
+		for i := 0; i < v303; i++ {
 			this.UUID[i] = byte(r.Intn(256))
 		}
 	}
@@ -27990,11 +27947,11 @@ func NewPopulatedTaskStatus(r randyMesos, easy bool) *TaskStatus {
 func NewPopulatedFilters(r randyMesos, easy bool) *Filters {
 	this := &Filters{}
 	if r.Intn(10) != 0 {
-		v305 := float64(r.Float64())
+		v304 := float64(r.Float64())
 		if r.Intn(2) == 0 {
-			v305 *= -1
+			v304 *= -1
 		}
-		this.RefuseSeconds = &v305
+		this.RefuseSeconds = &v304
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28004,11 +27961,11 @@ func NewPopulatedFilters(r randyMesos, easy bool) *Filters {
 func NewPopulatedEnvironment(r randyMesos, easy bool) *Environment {
 	this := &Environment{}
 	if r.Intn(10) != 0 {
-		v306 := r.Intn(10)
-		this.Variables = make([]Environment_Variable, v306)
-		for i := 0; i < v306; i++ {
-			v307 := NewPopulatedEnvironment_Variable(r, easy)
-			this.Variables[i] = *v307
+		v305 := r.Intn(10)
+		this.Variables = make([]Environment_Variable, v305)
+		for i := 0; i < v305; i++ {
+			v306 := NewPopulatedEnvironment_Variable(r, easy)
+			this.Variables[i] = *v306
 		}
 	}
 	if !easy && r.Intn(10) != 0 {
@@ -28037,11 +27994,11 @@ func NewPopulatedParameter(r randyMesos, easy bool) *Parameter {
 func NewPopulatedParameters(r randyMesos, easy bool) *Parameters {
 	this := &Parameters{}
 	if r.Intn(10) != 0 {
-		v308 := r.Intn(10)
-		this.Parameter = make([]Parameter, v308)
-		for i := 0; i < v308; i++ {
-			v309 := NewPopulatedParameter(r, easy)
-			this.Parameter[i] = *v309
+		v307 := r.Intn(10)
+		this.Parameter = make([]Parameter, v307)
+		for i := 0; i < v307; i++ {
+			v308 := NewPopulatedParameter(r, easy)
+			this.Parameter[i] = *v308
 		}
 	}
 	if !easy && r.Intn(10) != 0 {
@@ -28053,8 +28010,8 @@ func NewPopulatedCredential(r randyMesos, easy bool) *Credential {
 	this := &Credential{}
 	this.Principal = randStringMesos(r)
 	if r.Intn(10) != 0 {
-		v310 := randStringMesos(r)
-		this.Secret = &v310
+		v309 := randStringMesos(r)
+		this.Secret = &v309
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28064,11 +28021,11 @@ func NewPopulatedCredential(r randyMesos, easy bool) *Credential {
 func NewPopulatedCredentials(r randyMesos, easy bool) *Credentials {
 	this := &Credentials{}
 	if r.Intn(10) != 0 {
-		v311 := r.Intn(10)
-		this.Credentials = make([]Credential, v311)
-		for i := 0; i < v311; i++ {
-			v312 := NewPopulatedCredential(r, easy)
-			this.Credentials[i] = *v312
+		v310 := r.Intn(10)
+		this.Credentials = make([]Credential, v310)
+		for i := 0; i < v310; i++ {
+			v311 := NewPopulatedCredential(r, easy)
+			this.Credentials[i] = *v311
 		}
 	}
 	if !easy && r.Intn(10) != 0 {
@@ -28079,16 +28036,16 @@ func NewPopulatedCredentials(r randyMesos, easy bool) *Credentials {
 func NewPopulatedRateLimit(r randyMesos, easy bool) *RateLimit {
 	this := &RateLimit{}
 	if r.Intn(10) != 0 {
-		v313 := float64(r.Float64())
+		v312 := float64(r.Float64())
 		if r.Intn(2) == 0 {
-			v313 *= -1
+			v312 *= -1
 		}
-		this.QPS = &v313
+		this.QPS = &v312
 	}
 	this.Principal = randStringMesos(r)
 	if r.Intn(10) != 0 {
-		v314 := uint64(uint64(r.Uint32()))
-		this.Capacity = &v314
+		v313 := uint64(uint64(r.Uint32()))
+		this.Capacity = &v313
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28098,23 +28055,23 @@ func NewPopulatedRateLimit(r randyMesos, easy bool) *RateLimit {
 func NewPopulatedRateLimits(r randyMesos, easy bool) *RateLimits {
 	this := &RateLimits{}
 	if r.Intn(10) != 0 {
-		v315 := r.Intn(10)
-		this.Limits = make([]RateLimit, v315)
-		for i := 0; i < v315; i++ {
-			v316 := NewPopulatedRateLimit(r, easy)
-			this.Limits[i] = *v316
+		v314 := r.Intn(10)
+		this.Limits = make([]RateLimit, v314)
+		for i := 0; i < v314; i++ {
+			v315 := NewPopulatedRateLimit(r, easy)
+			this.Limits[i] = *v315
 		}
 	}
 	if r.Intn(10) != 0 {
-		v317 := float64(r.Float64())
+		v316 := float64(r.Float64())
 		if r.Intn(2) == 0 {
-			v317 *= -1
+			v316 *= -1
 		}
-		this.AggregateDefaultQPS = &v317
+		this.AggregateDefaultQPS = &v316
 	}
 	if r.Intn(10) != 0 {
-		v318 := uint64(uint64(r.Uint32()))
-		this.AggregateDefaultCapacity = &v318
+		v317 := uint64(uint64(r.Uint32()))
+		this.AggregateDefaultCapacity = &v317
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28123,8 +28080,8 @@ func NewPopulatedRateLimits(r randyMesos, easy bool) *RateLimits {
 
 func NewPopulatedImage(r randyMesos, easy bool) *Image {
 	this := &Image{}
-	v319 := Image_Type([]int32{1, 2}[r.Intn(2)])
-	this.Type = &v319
+	v318 := Image_Type([]int32{1, 2}[r.Intn(2)])
+	this.Type = &v318
 	if r.Intn(10) != 0 {
 		this.Appc = NewPopulatedImage_Appc(r, easy)
 	}
@@ -28132,8 +28089,8 @@ func NewPopulatedImage(r randyMesos, easy bool) *Image {
 		this.Docker = NewPopulatedImage_Docker(r, easy)
 	}
 	if r.Intn(10) != 0 {
-		v320 := bool(bool(r.Intn(2) == 0))
-		this.Cached = &v320
+		v319 := bool(bool(r.Intn(2) == 0))
+		this.Cached = &v319
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28144,8 +28101,8 @@ func NewPopulatedImage_Appc(r randyMesos, easy bool) *Image_Appc {
 	this := &Image_Appc{}
 	this.Name = randStringMesos(r)
 	if r.Intn(10) != 0 {
-		v321 := randStringMesos(r)
-		this.ID = &v321
+		v320 := randStringMesos(r)
+		this.ID = &v320
 	}
 	if r.Intn(10) != 0 {
 		this.Labels = NewPopulatedLabels(r, easy)
@@ -28170,8 +28127,8 @@ func NewPopulatedVolume(r randyMesos, easy bool) *Volume {
 	this := &Volume{}
 	this.ContainerPath = randStringMesos(r)
 	this.HostPath = randStringMesos(r)
-	v322 := Volume_Mode([]int32{1, 2}[r.Intn(2)])
-	this.Mode = &v322
+	v321 := Volume_Mode([]int32{1, 2}[r.Intn(2)])
+	this.Mode = &v321
 	if r.Intn(10) != 0 {
 		this.Image = NewPopulatedImage(r, easy)
 	}
@@ -28186,8 +28143,8 @@ func NewPopulatedVolume(r randyMesos, easy bool) *Volume {
 func NewPopulatedVolume_Source(r randyMesos, easy bool) *Volume_Source {
 	this := &Volume_Source{}
 	if r.Intn(10) != 0 {
-		v323 := Volume_Source_Type([]int32{0, 1, 2}[r.Intn(3)])
-		this.Type = &v323
+		v322 := Volume_Source_Type([]int32{0, 1, 2}[r.Intn(3)])
+		this.Type = &v322
 	}
 	if r.Intn(10) != 0 {
 		this.DockerVolume = NewPopulatedVolume_Source_DockerVolume(r, easy)
@@ -28203,8 +28160,8 @@ func NewPopulatedVolume_Source(r randyMesos, easy bool) *Volume_Source {
 func NewPopulatedVolume_Source_DockerVolume(r randyMesos, easy bool) *Volume_Source_DockerVolume {
 	this := &Volume_Source_DockerVolume{}
 	if r.Intn(10) != 0 {
-		v324 := randStringMesos(r)
-		this.Driver = &v324
+		v323 := randStringMesos(r)
+		this.Driver = &v323
 	}
 	this.Name = randStringMesos(r)
 	if r.Intn(10) != 0 {
@@ -28218,8 +28175,8 @@ func NewPopulatedVolume_Source_DockerVolume(r randyMesos, easy bool) *Volume_Sou
 func NewPopulatedVolume_Source_SandboxPath(r randyMesos, easy bool) *Volume_Source_SandboxPath {
 	this := &Volume_Source_SandboxPath{}
 	if r.Intn(10) != 0 {
-		v325 := Volume_Source_SandboxPath_Type([]int32{0, 1, 2}[r.Intn(3)])
-		this.Type = &v325
+		v324 := Volume_Source_SandboxPath_Type([]int32{0, 1, 2}[r.Intn(3)])
+		this.Type = &v324
 	}
 	this.Path = randStringMesos(r)
 	if !easy && r.Intn(10) != 0 {
@@ -28230,9 +28187,9 @@ func NewPopulatedVolume_Source_SandboxPath(r randyMesos, easy bool) *Volume_Sour
 func NewPopulatedNetworkInfo(r randyMesos, easy bool) *NetworkInfo {
 	this := &NetworkInfo{}
 	if r.Intn(10) != 0 {
-		v326 := r.Intn(10)
-		this.Groups = make([]string, v326)
-		for i := 0; i < v326; i++ {
+		v325 := r.Intn(10)
+		this.Groups = make([]string, v325)
+		for i := 0; i < v325; i++ {
 			this.Groups[i] = randStringMesos(r)
 		}
 	}
@@ -28240,21 +28197,21 @@ func NewPopulatedNetworkInfo(r randyMesos, easy bool) *NetworkInfo {
 		this.Labels = NewPopulatedLabels(r, easy)
 	}
 	if r.Intn(10) != 0 {
-		v327 := r.Intn(10)
-		this.IPAddresses = make([]NetworkInfo_IPAddress, v327)
-		for i := 0; i < v327; i++ {
-			v328 := NewPopulatedNetworkInfo_IPAddress(r, easy)
-			this.IPAddresses[i] = *v328
+		v326 := r.Intn(10)
+		this.IPAddresses = make([]NetworkInfo_IPAddress, v326)
+		for i := 0; i < v326; i++ {
+			v327 := NewPopulatedNetworkInfo_IPAddress(r, easy)
+			this.IPAddresses[i] = *v327
 		}
 	}
 	if r.Intn(10) != 0 {
-		v329 := randStringMesos(r)
-		this.Name = &v329
+		v328 := randStringMesos(r)
+		this.Name = &v328
 	}
 	if r.Intn(10) != 0 {
-		v330 := r.Intn(10)
-		this.PortMappings = make([]*NetworkInfo_PortMapping, v330)
-		for i := 0; i < v330; i++ {
+		v329 := r.Intn(10)
+		this.PortMappings = make([]*NetworkInfo_PortMapping, v329)
+		for i := 0; i < v329; i++ {
 			this.PortMappings[i] = NewPopulatedNetworkInfo_PortMapping(r, easy)
 		}
 	}
@@ -28266,12 +28223,12 @@ func NewPopulatedNetworkInfo(r randyMesos, easy bool) *NetworkInfo {
 func NewPopulatedNetworkInfo_IPAddress(r randyMesos, easy bool) *NetworkInfo_IPAddress {
 	this := &NetworkInfo_IPAddress{}
 	if r.Intn(10) != 0 {
-		v331 := NetworkInfo_Protocol([]int32{1, 2}[r.Intn(2)])
-		this.Protocol = &v331
+		v330 := NetworkInfo_Protocol([]int32{1, 2}[r.Intn(2)])
+		this.Protocol = &v330
 	}
 	if r.Intn(10) != 0 {
-		v332 := randStringMesos(r)
-		this.IPAddress = &v332
+		v331 := randStringMesos(r)
+		this.IPAddress = &v331
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28283,8 +28240,8 @@ func NewPopulatedNetworkInfo_PortMapping(r randyMesos, easy bool) *NetworkInfo_P
 	this.HostPort = uint32(r.Uint32())
 	this.ContainerPort = uint32(r.Uint32())
 	if r.Intn(10) != 0 {
-		v333 := randStringMesos(r)
-		this.Protocol = &v333
+		v332 := randStringMesos(r)
+		this.Protocol = &v332
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28294,9 +28251,9 @@ func NewPopulatedNetworkInfo_PortMapping(r randyMesos, easy bool) *NetworkInfo_P
 func NewPopulatedCapabilityInfo(r randyMesos, easy bool) *CapabilityInfo {
 	this := &CapabilityInfo{}
 	if r.Intn(10) != 0 {
-		v334 := r.Intn(10)
-		this.Capabilities = make([]CapabilityInfo_Capability, v334)
-		for i := 0; i < v334; i++ {
+		v333 := r.Intn(10)
+		this.Capabilities = make([]CapabilityInfo_Capability, v333)
+		for i := 0; i < v333; i++ {
 			this.Capabilities[i] = CapabilityInfo_Capability([]int32{0, 1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037}[r.Intn(39)])
 		}
 	}
@@ -28317,32 +28274,32 @@ func NewPopulatedLinuxInfo(r randyMesos, easy bool) *LinuxInfo {
 
 func NewPopulatedContainerInfo(r randyMesos, easy bool) *ContainerInfo {
 	this := &ContainerInfo{}
-	v335 := ContainerInfo_Type([]int32{1, 2}[r.Intn(2)])
-	this.Type = &v335
+	v334 := ContainerInfo_Type([]int32{1, 2}[r.Intn(2)])
+	this.Type = &v334
 	if r.Intn(10) != 0 {
-		v336 := r.Intn(10)
-		this.Volumes = make([]Volume, v336)
-		for i := 0; i < v336; i++ {
-			v337 := NewPopulatedVolume(r, easy)
-			this.Volumes[i] = *v337
+		v335 := r.Intn(10)
+		this.Volumes = make([]Volume, v335)
+		for i := 0; i < v335; i++ {
+			v336 := NewPopulatedVolume(r, easy)
+			this.Volumes[i] = *v336
 		}
 	}
 	if r.Intn(10) != 0 {
 		this.Docker = NewPopulatedContainerInfo_DockerInfo(r, easy)
 	}
 	if r.Intn(10) != 0 {
-		v338 := randStringMesos(r)
-		this.Hostname = &v338
+		v337 := randStringMesos(r)
+		this.Hostname = &v337
 	}
 	if r.Intn(10) != 0 {
 		this.Mesos = NewPopulatedContainerInfo_MesosInfo(r, easy)
 	}
 	if r.Intn(10) != 0 {
-		v339 := r.Intn(10)
-		this.NetworkInfos = make([]NetworkInfo, v339)
-		for i := 0; i < v339; i++ {
-			v340 := NewPopulatedNetworkInfo(r, easy)
-			this.NetworkInfos[i] = *v340
+		v338 := r.Intn(10)
+		this.NetworkInfos = make([]NetworkInfo, v338)
+		for i := 0; i < v338; i++ {
+			v339 := NewPopulatedNetworkInfo(r, easy)
+			this.NetworkInfos[i] = *v339
 		}
 	}
 	if r.Intn(10) != 0 {
@@ -28357,36 +28314,36 @@ func NewPopulatedContainerInfo_DockerInfo(r randyMesos, easy bool) *ContainerInf
 	this := &ContainerInfo_DockerInfo{}
 	this.Image = randStringMesos(r)
 	if r.Intn(10) != 0 {
-		v341 := ContainerInfo_DockerInfo_Network([]int32{1, 2, 3, 4}[r.Intn(4)])
-		this.Network = &v341
+		v340 := ContainerInfo_DockerInfo_Network([]int32{1, 2, 3, 4}[r.Intn(4)])
+		this.Network = &v340
 	}
 	if r.Intn(10) != 0 {
-		v342 := r.Intn(10)
-		this.PortMappings = make([]ContainerInfo_DockerInfo_PortMapping, v342)
-		for i := 0; i < v342; i++ {
-			v343 := NewPopulatedContainerInfo_DockerInfo_PortMapping(r, easy)
-			this.PortMappings[i] = *v343
+		v341 := r.Intn(10)
+		this.PortMappings = make([]ContainerInfo_DockerInfo_PortMapping, v341)
+		for i := 0; i < v341; i++ {
+			v342 := NewPopulatedContainerInfo_DockerInfo_PortMapping(r, easy)
+			this.PortMappings[i] = *v342
 		}
 	}
 	if r.Intn(10) != 0 {
-		v344 := bool(bool(r.Intn(2) == 0))
-		this.Privileged = &v344
+		v343 := bool(bool(r.Intn(2) == 0))
+		this.Privileged = &v343
 	}
 	if r.Intn(10) != 0 {
-		v345 := r.Intn(10)
-		this.Parameters = make([]Parameter, v345)
-		for i := 0; i < v345; i++ {
-			v346 := NewPopulatedParameter(r, easy)
-			this.Parameters[i] = *v346
+		v344 := r.Intn(10)
+		this.Parameters = make([]Parameter, v344)
+		for i := 0; i < v344; i++ {
+			v345 := NewPopulatedParameter(r, easy)
+			this.Parameters[i] = *v345
 		}
 	}
 	if r.Intn(10) != 0 {
-		v347 := bool(bool(r.Intn(2) == 0))
-		this.ForcePullImage = &v347
+		v346 := bool(bool(r.Intn(2) == 0))
+		this.ForcePullImage = &v346
 	}
 	if r.Intn(10) != 0 {
-		v348 := randStringMesos(r)
-		this.VolumeDriver = &v348
+		v347 := randStringMesos(r)
+		this.VolumeDriver = &v347
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28398,8 +28355,8 @@ func NewPopulatedContainerInfo_DockerInfo_PortMapping(r randyMesos, easy bool) *
 	this.HostPort = uint32(r.Uint32())
 	this.ContainerPort = uint32(r.Uint32())
 	if r.Intn(10) != 0 {
-		v349 := randStringMesos(r)
-		this.Protocol = &v349
+		v348 := randStringMesos(r)
+		this.Protocol = &v348
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28419,19 +28376,19 @@ func NewPopulatedContainerInfo_MesosInfo(r randyMesos, easy bool) *ContainerInfo
 func NewPopulatedContainerStatus(r randyMesos, easy bool) *ContainerStatus {
 	this := &ContainerStatus{}
 	if r.Intn(10) != 0 {
-		v350 := r.Intn(10)
-		this.NetworkInfos = make([]NetworkInfo, v350)
-		for i := 0; i < v350; i++ {
-			v351 := NewPopulatedNetworkInfo(r, easy)
-			this.NetworkInfos[i] = *v351
+		v349 := r.Intn(10)
+		this.NetworkInfos = make([]NetworkInfo, v349)
+		for i := 0; i < v349; i++ {
+			v350 := NewPopulatedNetworkInfo(r, easy)
+			this.NetworkInfos[i] = *v350
 		}
 	}
 	if r.Intn(10) != 0 {
 		this.CgroupInfo = NewPopulatedCgroupInfo(r, easy)
 	}
 	if r.Intn(10) != 0 {
-		v352 := uint32(r.Uint32())
-		this.ExecutorPID = &v352
+		v351 := uint32(r.Uint32())
+		this.ExecutorPID = &v351
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28451,8 +28408,8 @@ func NewPopulatedCgroupInfo(r randyMesos, easy bool) *CgroupInfo {
 func NewPopulatedCgroupInfo_NetCls(r randyMesos, easy bool) *CgroupInfo_NetCls {
 	this := &CgroupInfo_NetCls{}
 	if r.Intn(10) != 0 {
-		v353 := uint32(r.Uint32())
-		this.ClassID = &v353
+		v352 := uint32(r.Uint32())
+		this.ClassID = &v352
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28462,11 +28419,11 @@ func NewPopulatedCgroupInfo_NetCls(r randyMesos, easy bool) *CgroupInfo_NetCls {
 func NewPopulatedLabels(r randyMesos, easy bool) *Labels {
 	this := &Labels{}
 	if r.Intn(10) != 0 {
-		v354 := r.Intn(10)
-		this.Labels = make([]Label, v354)
-		for i := 0; i < v354; i++ {
-			v355 := NewPopulatedLabel(r, easy)
-			this.Labels[i] = *v355
+		v353 := r.Intn(10)
+		this.Labels = make([]Label, v353)
+		for i := 0; i < v353; i++ {
+			v354 := NewPopulatedLabel(r, easy)
+			this.Labels[i] = *v354
 		}
 	}
 	if !easy && r.Intn(10) != 0 {
@@ -28478,8 +28435,8 @@ func NewPopulatedLabel(r randyMesos, easy bool) *Label {
 	this := &Label{}
 	this.Key = randStringMesos(r)
 	if r.Intn(10) != 0 {
-		v356 := randStringMesos(r)
-		this.Value = &v356
+		v355 := randStringMesos(r)
+		this.Value = &v355
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28490,16 +28447,16 @@ func NewPopulatedPort(r randyMesos, easy bool) *Port {
 	this := &Port{}
 	this.Number = uint32(r.Uint32())
 	if r.Intn(10) != 0 {
+		v356 := randStringMesos(r)
+		this.Name = &v356
+	}
+	if r.Intn(10) != 0 {
 		v357 := randStringMesos(r)
-		this.Name = &v357
+		this.Protocol = &v357
 	}
 	if r.Intn(10) != 0 {
-		v358 := randStringMesos(r)
-		this.Protocol = &v358
-	}
-	if r.Intn(10) != 0 {
-		v359 := DiscoveryInfo_Visibility([]int32{0, 1, 2}[r.Intn(3)])
-		this.Visibility = &v359
+		v358 := DiscoveryInfo_Visibility([]int32{0, 1, 2}[r.Intn(3)])
+		this.Visibility = &v358
 	}
 	if r.Intn(10) != 0 {
 		this.Labels = NewPopulatedLabels(r, easy)
@@ -28512,11 +28469,11 @@ func NewPopulatedPort(r randyMesos, easy bool) *Port {
 func NewPopulatedPorts(r randyMesos, easy bool) *Ports {
 	this := &Ports{}
 	if r.Intn(10) != 0 {
-		v360 := r.Intn(10)
-		this.Ports = make([]Port, v360)
-		for i := 0; i < v360; i++ {
-			v361 := NewPopulatedPort(r, easy)
-			this.Ports[i] = *v361
+		v359 := r.Intn(10)
+		this.Ports = make([]Port, v359)
+		for i := 0; i < v359; i++ {
+			v360 := NewPopulatedPort(r, easy)
+			this.Ports[i] = *v360
 		}
 	}
 	if !easy && r.Intn(10) != 0 {
@@ -28528,20 +28485,20 @@ func NewPopulatedDiscoveryInfo(r randyMesos, easy bool) *DiscoveryInfo {
 	this := &DiscoveryInfo{}
 	this.Visibility = DiscoveryInfo_Visibility([]int32{0, 1, 2}[r.Intn(3)])
 	if r.Intn(10) != 0 {
+		v361 := randStringMesos(r)
+		this.Name = &v361
+	}
+	if r.Intn(10) != 0 {
 		v362 := randStringMesos(r)
-		this.Name = &v362
+		this.Environment = &v362
 	}
 	if r.Intn(10) != 0 {
 		v363 := randStringMesos(r)
-		this.Environment = &v363
+		this.Location = &v363
 	}
 	if r.Intn(10) != 0 {
 		v364 := randStringMesos(r)
-		this.Location = &v364
-	}
-	if r.Intn(10) != 0 {
-		v365 := randStringMesos(r)
-		this.Version = &v365
+		this.Version = &v364
 	}
 	if r.Intn(10) != 0 {
 		this.Ports = NewPopulatedPorts(r, easy)
@@ -28561,8 +28518,8 @@ func NewPopulatedWeightInfo(r randyMesos, easy bool) *WeightInfo {
 		this.Weight *= -1
 	}
 	if r.Intn(10) != 0 {
-		v366 := randStringMesos(r)
-		this.Role = &v366
+		v365 := randStringMesos(r)
+		this.Role = &v365
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28573,31 +28530,31 @@ func NewPopulatedVersionInfo(r randyMesos, easy bool) *VersionInfo {
 	this := &VersionInfo{}
 	this.Version = randStringMesos(r)
 	if r.Intn(10) != 0 {
-		v367 := randStringMesos(r)
-		this.BuildDate = &v367
+		v366 := randStringMesos(r)
+		this.BuildDate = &v366
 	}
 	if r.Intn(10) != 0 {
-		v368 := float64(r.Float64())
+		v367 := float64(r.Float64())
 		if r.Intn(2) == 0 {
-			v368 *= -1
+			v367 *= -1
 		}
-		this.BuildTime = &v368
+		this.BuildTime = &v367
+	}
+	if r.Intn(10) != 0 {
+		v368 := randStringMesos(r)
+		this.BuildUser = &v368
 	}
 	if r.Intn(10) != 0 {
 		v369 := randStringMesos(r)
-		this.BuildUser = &v369
+		this.GitSHA = &v369
 	}
 	if r.Intn(10) != 0 {
 		v370 := randStringMesos(r)
-		this.GitSHA = &v370
+		this.GitBranch = &v370
 	}
 	if r.Intn(10) != 0 {
 		v371 := randStringMesos(r)
-		this.GitBranch = &v371
-	}
-	if r.Intn(10) != 0 {
-		v372 := randStringMesos(r)
-		this.GitTag = &v372
+		this.GitTag = &v371
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28608,8 +28565,8 @@ func NewPopulatedFlag(r randyMesos, easy bool) *Flag {
 	this := &Flag{}
 	this.Name = randStringMesos(r)
 	if r.Intn(10) != 0 {
-		v373 := randStringMesos(r)
-		this.Value = &v373
+		v372 := randStringMesos(r)
+		this.Value = &v372
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28624,19 +28581,19 @@ func NewPopulatedRole(r randyMesos, easy bool) *Role {
 		this.Weight *= -1
 	}
 	if r.Intn(10) != 0 {
-		v374 := r.Intn(10)
-		this.Frameworks = make([]FrameworkID, v374)
-		for i := 0; i < v374; i++ {
-			v375 := NewPopulatedFrameworkID(r, easy)
-			this.Frameworks[i] = *v375
+		v373 := r.Intn(10)
+		this.Frameworks = make([]FrameworkID, v373)
+		for i := 0; i < v373; i++ {
+			v374 := NewPopulatedFrameworkID(r, easy)
+			this.Frameworks[i] = *v374
 		}
 	}
 	if r.Intn(10) != 0 {
-		v376 := r.Intn(10)
-		this.Resources = make([]Resource, v376)
-		for i := 0; i < v376; i++ {
-			v377 := NewPopulatedResource(r, easy)
-			this.Resources[i] = *v377
+		v375 := r.Intn(10)
+		this.Resources = make([]Resource, v375)
+		for i := 0; i < v375; i++ {
+			v376 := NewPopulatedResource(r, easy)
+			this.Resources[i] = *v376
 		}
 	}
 	if !easy && r.Intn(10) != 0 {
@@ -28648,11 +28605,11 @@ func NewPopulatedMetric(r randyMesos, easy bool) *Metric {
 	this := &Metric{}
 	this.Name = randStringMesos(r)
 	if r.Intn(10) != 0 {
-		v378 := float64(r.Float64())
+		v377 := float64(r.Float64())
 		if r.Intn(2) == 0 {
-			v378 *= -1
+			v377 *= -1
 		}
-		this.Value = &v378
+		this.Value = &v377
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28663,30 +28620,30 @@ func NewPopulatedFileInfo(r randyMesos, easy bool) *FileInfo {
 	this := &FileInfo{}
 	this.Path = randStringMesos(r)
 	if r.Intn(10) != 0 {
-		v379 := int32(r.Int31())
+		v378 := int32(r.Int31())
 		if r.Intn(2) == 0 {
-			v379 *= -1
+			v378 *= -1
 		}
-		this.Nlink = &v379
+		this.Nlink = &v378
 	}
 	if r.Intn(10) != 0 {
-		v380 := uint64(uint64(r.Uint32()))
-		this.Size_ = &v380
+		v379 := uint64(uint64(r.Uint32()))
+		this.Size_ = &v379
 	}
 	if r.Intn(10) != 0 {
 		this.Mtime = NewPopulatedTimeInfo(r, easy)
 	}
 	if r.Intn(10) != 0 {
-		v381 := uint32(r.Uint32())
-		this.Mode = &v381
+		v380 := uint32(r.Uint32())
+		this.Mode = &v380
+	}
+	if r.Intn(10) != 0 {
+		v381 := randStringMesos(r)
+		this.UID = &v381
 	}
 	if r.Intn(10) != 0 {
 		v382 := randStringMesos(r)
-		this.UID = &v382
-	}
-	if r.Intn(10) != 0 {
-		v383 := randStringMesos(r)
-		this.GID = &v383
+		this.GID = &v382
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -28712,9 +28669,9 @@ func randUTF8RuneMesos(r randyMesos) rune {
 	return rune(ru + 61)
 }
 func randStringMesos(r randyMesos) string {
-	v384 := r.Intn(100)
-	tmps := make([]rune, v384)
-	for i := 0; i < v384; i++ {
+	v383 := r.Intn(100)
+	tmps := make([]rune, v383)
+	for i := 0; i < v383; i++ {
 		tmps[i] = randUTF8RuneMesos(r)
 	}
 	return string(tmps)
@@ -28736,11 +28693,11 @@ func randFieldMesos(data []byte, r randyMesos, fieldNumber int, wire int) []byte
 	switch wire {
 	case 0:
 		data = encodeVarintPopulateMesos(data, uint64(key))
-		v385 := r.Int63()
+		v384 := r.Int63()
 		if r.Intn(2) == 0 {
-			v385 *= -1
+			v384 *= -1
 		}
-		data = encodeVarintPopulateMesos(data, uint64(v385))
+		data = encodeVarintPopulateMesos(data, uint64(v384))
 	case 1:
 		data = encodeVarintPopulateMesos(data, uint64(key))
 		data = append(data, byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)))
@@ -30391,14 +30348,10 @@ func (m *TaskStatus) Size() (n int) {
 		l = len(m.Data)
 		n += 1 + l + sovMesos(uint64(l))
 	}
-	if m.Message != nil {
-		l = len(*m.Message)
-		n += 1 + l + sovMesos(uint64(l))
-	}
-	if m.AgentID != nil {
-		l = m.AgentID.Size()
-		n += 1 + l + sovMesos(uint64(l))
-	}
+	l = len(m.Message)
+	n += 1 + l + sovMesos(uint64(l))
+	l = m.AgentID.Size()
+	n += 1 + l + sovMesos(uint64(l))
 	if m.Timestamp != nil {
 		n += 9
 	}
@@ -30410,9 +30363,7 @@ func (m *TaskStatus) Size() (n int) {
 	if m.Source != nil {
 		n += 1 + sovMesos(uint64(*m.Source))
 	}
-	if m.Reason != nil {
-		n += 1 + sovMesos(uint64(*m.Reason))
-	}
+	n += 1 + sovMesos(uint64(m.Reason))
 	if m.UUID != nil {
 		l = len(m.UUID)
 		n += 1 + l + sovMesos(uint64(l))
@@ -32035,13 +31986,13 @@ func (this *TaskStatus) String() string {
 		`TaskID:` + strings.Replace(strings.Replace(this.TaskID.String(), "TaskID", "TaskID", 1), `&`, ``, 1) + `,`,
 		`State:` + valueToStringMesos(this.State) + `,`,
 		`Data:` + valueToStringMesos(this.Data) + `,`,
-		`Message:` + valueToStringMesos(this.Message) + `,`,
-		`AgentID:` + strings.Replace(fmt.Sprintf("%v", this.AgentID), "AgentID", "AgentID", 1) + `,`,
+		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
+		`AgentID:` + strings.Replace(strings.Replace(this.AgentID.String(), "AgentID", "AgentID", 1), `&`, ``, 1) + `,`,
 		`Timestamp:` + valueToStringMesos(this.Timestamp) + `,`,
 		`ExecutorID:` + strings.Replace(strings.Replace(this.ExecutorID.String(), "ExecutorID", "ExecutorID", 1), `&`, ``, 1) + `,`,
 		`Healthy:` + valueToStringMesos(this.Healthy) + `,`,
 		`Source:` + valueToStringMesos(this.Source) + `,`,
-		`Reason:` + valueToStringMesos(this.Reason) + `,`,
+		`Reason:` + fmt.Sprintf("%v", this.Reason) + `,`,
 		`UUID:` + valueToStringMesos(this.UUID) + `,`,
 		`Labels:` + strings.Replace(fmt.Sprintf("%v", this.Labels), "Labels", "Labels", 1) + `,`,
 		`ContainerStatus:` + strings.Replace(fmt.Sprintf("%v", this.ContainerStatus), "ContainerStatus", "ContainerStatus", 1) + `,`,
@@ -45433,8 +45384,7 @@ func (m *TaskStatus) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Message = &s
+			m.Message = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
@@ -45461,9 +45411,6 @@ func (m *TaskStatus) Unmarshal(data []byte) error {
 			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
-			}
-			if m.AgentID == nil {
-				m.AgentID = &AgentID{}
 			}
 			if err := m.AgentID.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
@@ -45563,7 +45510,7 @@ func (m *TaskStatus) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
 			}
-			var v TaskStatus_Reason
+			m.Reason = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowMesos
@@ -45573,12 +45520,11 @@ func (m *TaskStatus) Unmarshal(data []byte) error {
 				}
 				b := data[iNdEx]
 				iNdEx++
-				v |= (TaskStatus_Reason(b) & 0x7F) << shift
+				m.Reason |= (TaskStatus_Reason(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Reason = &v
 		case 11:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UUID", wireType)

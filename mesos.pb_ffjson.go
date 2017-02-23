@@ -38415,13 +38415,9 @@ func (mj *TaskStatus) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			buf.WriteByte(',')
 		}
 	}
-	if mj.Message != nil {
-		if true {
-			buf.WriteString(`"message":`)
-			fflib.WriteJsonString(buf, string(*mj.Message))
-			buf.WriteByte(',')
-		}
-	}
+	buf.WriteString(`"message":`)
+	fflib.WriteJsonString(buf, string(mj.Message))
+	buf.WriteByte(',')
 	if mj.Source != nil {
 		if true {
 			buf.WriteString(`"source":`)
@@ -38438,22 +38434,18 @@ func (mj *TaskStatus) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			buf.WriteByte(',')
 		}
 	}
-	if mj.Reason != nil {
-		if true {
-			buf.WriteString(`"reason":`)
+	buf.WriteString(`"reason":`)
 
-			{
+	{
 
-				obj, err = mj.Reason.MarshalJSON()
-				if err != nil {
-					return err
-				}
-				buf.Write(obj)
-
-			}
-			buf.WriteByte(',')
+		obj, err = mj.Reason.MarshalJSON()
+		if err != nil {
+			return err
 		}
+		buf.Write(obj)
+
 	}
+	buf.WriteByte(',')
 	if len(mj.Data) != 0 {
 		buf.WriteString(`"data":`)
 		if mj.Data != nil {
@@ -38469,22 +38461,17 @@ func (mj *TaskStatus) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		}
 		buf.WriteByte(',')
 	}
-	if mj.AgentID != nil {
-		if true {
-			buf.WriteString(`"agent_id":`)
+	buf.WriteString(`"agent_id":`)
 
-			{
+	{
 
-				err = mj.AgentID.MarshalJSONBuf(buf)
-				if err != nil {
-					return err
-				}
-
-			}
-			buf.WriteByte(',')
+		err = mj.AgentID.MarshalJSONBuf(buf)
+		if err != nil {
+			return err
 		}
+
 	}
-	buf.WriteString(`"executor_id":`)
+	buf.WriteString(`,"executor_id":`)
 
 	{
 
@@ -39026,15 +39013,11 @@ handle_Message:
 
 		if tok == fflib.FFTok_null {
 
-			uj.Message = nil
-
 		} else {
 
-			var tval string
 			outBuf := fs.Output.Bytes()
 
-			tval = string(string(outBuf))
-			uj.Message = &tval
+			uj.Message = string(string(outBuf))
 
 		}
 	}
@@ -39081,8 +39064,6 @@ handle_Reason:
 	{
 		if tok == fflib.FFTok_null {
 
-			uj.Reason = nil
-
 			state = fflib.FFParse_after_value
 			goto mainparse
 		}
@@ -39090,10 +39071,6 @@ handle_Reason:
 		tbuf, err := fs.CaptureField(tok)
 		if err != nil {
 			return fs.WrapErr(err)
-		}
-
-		if uj.Reason == nil {
-			uj.Reason = new(TaskStatus_Reason)
 		}
 
 		err = uj.Reason.UnmarshalJSON(tbuf)
@@ -39143,14 +39120,8 @@ handle_AgentID:
 	{
 		if tok == fflib.FFTok_null {
 
-			uj.AgentID = nil
-
 			state = fflib.FFParse_after_value
 			goto mainparse
-		}
-
-		if uj.AgentID == nil {
-			uj.AgentID = new(AgentID)
 		}
 
 		err = uj.AgentID.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
