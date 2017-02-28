@@ -6,10 +6,10 @@ import (
 	"github.com/mesos/mesos-go"
 	"github.com/mesos/mesos-go/encoding"
 	"github.com/mesos/mesos-go/httpcli"
+	"github.com/mesos/mesos-go/httpcli/operator"
 	"github.com/mesos/mesos-go/master"
 	"github.com/mesos/mesos-go/master/calls"
 	"github.com/mesos/mesos-go/master/events"
-	"github.com/mesos/mesos-go/master/responses"
 	"os"
 )
 
@@ -72,20 +72,16 @@ func subscribe() {
 }
 
 func tasks() {
-	var (
-		client = httpcli.New(
+	op := operator.NewCaller(
+		httpcli.New(
 			httpcli.Endpoint("http://localhost:5050/api/v1"),
-			// Change to the non-framing Protobuf codec for simple HTTP
-			// calls to the operator API.
-			httpcli.Codec(&encoding.ProtobufCodec),
-		)
+		),
 	)
-	tasks, err := responses.GetTasks(client.Do(calls.GetTasks()))
+	resp, err := op.CallMaster(calls.GetTasks())
 	if err != nil {
 		fmt.Println("Error: ", err)
-		os.Exit(1)
 	}
-	for _, task := range tasks {
+	for _, task := range resp.GetTasks.Tasks {
 		fmt.Printf("%s - %s: %s\n", task.Name, task.TaskID.Value, mesos.TaskState_name[int32(*task.State)])
 	}
 }
