@@ -19,9 +19,9 @@ import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import mesos "github.com/mesos/mesos-go"
+import mesos_allocator "github.com/mesos/mesos-go/allocator"
 
 // discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
-import mesos_allocator "github.com/mesos/mesos-go/allocator"
 
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"

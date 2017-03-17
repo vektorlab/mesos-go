@@ -11,6 +11,7 @@
 	It has these top-level messages:
 		Call
 		Response
+		ProcessIO
 */
 package agent
 
@@ -40,7 +41,8 @@ var _ = math.Inf
 // If a call of type `Call::FOO` requires additional parameters they can be
 // included in the corresponding `Call::Foo` message. Similarly, if a call
 // receives a synchronous response it will be returned as a `Response`
-// message of type `Response::FOO`.
+// message of type `Response::FOO`; see `Call::LaunchNestedContainerSession`
+// and `Call::AttachContainerOutput` for exceptions.
 type Call_Type int32
 
 const (
@@ -62,6 +64,10 @@ const (
 	Call_LAUNCH_NESTED_CONTAINER Call_Type = 14
 	Call_WAIT_NESTED_CONTAINER   Call_Type = 15
 	Call_KILL_NESTED_CONTAINER   Call_Type = 16
+	// See 'LaunchNestedContainerSession' below.
+	Call_LAUNCH_NESTED_CONTAINER_SESSION Call_Type = 17
+	Call_ATTACH_CONTAINER_INPUT          Call_Type = 18
+	Call_ATTACH_CONTAINER_OUTPUT         Call_Type = 19
 )
 
 var Call_Type_name = map[int32]string{
@@ -82,25 +88,31 @@ var Call_Type_name = map[int32]string{
 	14: "LAUNCH_NESTED_CONTAINER",
 	15: "WAIT_NESTED_CONTAINER",
 	16: "KILL_NESTED_CONTAINER",
+	17: "LAUNCH_NESTED_CONTAINER_SESSION",
+	18: "ATTACH_CONTAINER_INPUT",
+	19: "ATTACH_CONTAINER_OUTPUT",
 }
 var Call_Type_value = map[string]int32{
-	"UNKNOWN":                 0,
-	"GET_HEALTH":              1,
-	"GET_FLAGS":               2,
-	"GET_VERSION":             3,
-	"GET_METRICS":             4,
-	"GET_LOGGING_LEVEL":       5,
-	"SET_LOGGING_LEVEL":       6,
-	"LIST_FILES":              7,
-	"READ_FILE":               8,
-	"GET_STATE":               9,
-	"GET_CONTAINERS":          10,
-	"GET_FRAMEWORKS":          11,
-	"GET_EXECUTORS":           12,
-	"GET_TASKS":               13,
-	"LAUNCH_NESTED_CONTAINER": 14,
-	"WAIT_NESTED_CONTAINER":   15,
-	"KILL_NESTED_CONTAINER":   16,
+	"UNKNOWN":                         0,
+	"GET_HEALTH":                      1,
+	"GET_FLAGS":                       2,
+	"GET_VERSION":                     3,
+	"GET_METRICS":                     4,
+	"GET_LOGGING_LEVEL":               5,
+	"SET_LOGGING_LEVEL":               6,
+	"LIST_FILES":                      7,
+	"READ_FILE":                       8,
+	"GET_STATE":                       9,
+	"GET_CONTAINERS":                  10,
+	"GET_FRAMEWORKS":                  11,
+	"GET_EXECUTORS":                   12,
+	"GET_TASKS":                       13,
+	"LAUNCH_NESTED_CONTAINER":         14,
+	"WAIT_NESTED_CONTAINER":           15,
+	"KILL_NESTED_CONTAINER":           16,
+	"LAUNCH_NESTED_CONTAINER_SESSION": 17,
+	"ATTACH_CONTAINER_INPUT":          18,
+	"ATTACH_CONTAINER_OUTPUT":         19,
 }
 
 func (x Call_Type) Enum() *Call_Type {
@@ -117,6 +129,42 @@ func (x *Call_Type) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*x = Call_Type(value)
+	return nil
+}
+
+type Call_AttachContainerInput_Type int32
+
+const (
+	Call_AttachContainerInput_UNKNOWN      Call_AttachContainerInput_Type = 0
+	Call_AttachContainerInput_CONTAINER_ID Call_AttachContainerInput_Type = 1
+	Call_AttachContainerInput_PROCESS_IO   Call_AttachContainerInput_Type = 2
+)
+
+var Call_AttachContainerInput_Type_name = map[int32]string{
+	0: "UNKNOWN",
+	1: "CONTAINER_ID",
+	2: "PROCESS_IO",
+}
+var Call_AttachContainerInput_Type_value = map[string]int32{
+	"UNKNOWN":      0,
+	"CONTAINER_ID": 1,
+	"PROCESS_IO":   2,
+}
+
+func (x Call_AttachContainerInput_Type) Enum() *Call_AttachContainerInput_Type {
+	p := new(Call_AttachContainerInput_Type)
+	*p = x
+	return p
+}
+func (x Call_AttachContainerInput_Type) MarshalJSON() ([]byte, error) {
+	return proto.MarshalJSONEnum(Call_AttachContainerInput_Type_name, int32(x))
+}
+func (x *Call_AttachContainerInput_Type) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(Call_AttachContainerInput_Type_value, data, "Call_AttachContainerInput_Type")
+	if err != nil {
+		return err
+	}
+	*x = Call_AttachContainerInput_Type(value)
 	return nil
 }
 
@@ -190,6 +238,117 @@ func (x *Response_Type) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type ProcessIO_Type int32
+
+const (
+	ProcessIO_UNKNOWN ProcessIO_Type = 0
+	ProcessIO_DATA    ProcessIO_Type = 1
+	ProcessIO_CONTROL ProcessIO_Type = 2
+)
+
+var ProcessIO_Type_name = map[int32]string{
+	0: "UNKNOWN",
+	1: "DATA",
+	2: "CONTROL",
+}
+var ProcessIO_Type_value = map[string]int32{
+	"UNKNOWN": 0,
+	"DATA":    1,
+	"CONTROL": 2,
+}
+
+func (x ProcessIO_Type) Enum() *ProcessIO_Type {
+	p := new(ProcessIO_Type)
+	*p = x
+	return p
+}
+func (x ProcessIO_Type) MarshalJSON() ([]byte, error) {
+	return proto.MarshalJSONEnum(ProcessIO_Type_name, int32(x))
+}
+func (x *ProcessIO_Type) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(ProcessIO_Type_value, data, "ProcessIO_Type")
+	if err != nil {
+		return err
+	}
+	*x = ProcessIO_Type(value)
+	return nil
+}
+
+type ProcessIO_Data_Type int32
+
+const (
+	ProcessIO_Data_UNKNOWN ProcessIO_Data_Type = 0
+	ProcessIO_Data_STDIN   ProcessIO_Data_Type = 1
+	ProcessIO_Data_STDOUT  ProcessIO_Data_Type = 2
+	ProcessIO_Data_STDERR  ProcessIO_Data_Type = 3
+)
+
+var ProcessIO_Data_Type_name = map[int32]string{
+	0: "UNKNOWN",
+	1: "STDIN",
+	2: "STDOUT",
+	3: "STDERR",
+}
+var ProcessIO_Data_Type_value = map[string]int32{
+	"UNKNOWN": 0,
+	"STDIN":   1,
+	"STDOUT":  2,
+	"STDERR":  3,
+}
+
+func (x ProcessIO_Data_Type) Enum() *ProcessIO_Data_Type {
+	p := new(ProcessIO_Data_Type)
+	*p = x
+	return p
+}
+func (x ProcessIO_Data_Type) MarshalJSON() ([]byte, error) {
+	return proto.MarshalJSONEnum(ProcessIO_Data_Type_name, int32(x))
+}
+func (x *ProcessIO_Data_Type) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(ProcessIO_Data_Type_value, data, "ProcessIO_Data_Type")
+	if err != nil {
+		return err
+	}
+	*x = ProcessIO_Data_Type(value)
+	return nil
+}
+
+type ProcessIO_Control_Type int32
+
+const (
+	ProcessIO_Control_UNKNOWN   ProcessIO_Control_Type = 0
+	ProcessIO_Control_TTY_INFO  ProcessIO_Control_Type = 1
+	ProcessIO_Control_HEARTBEAT ProcessIO_Control_Type = 2
+)
+
+var ProcessIO_Control_Type_name = map[int32]string{
+	0: "UNKNOWN",
+	1: "TTY_INFO",
+	2: "HEARTBEAT",
+}
+var ProcessIO_Control_Type_value = map[string]int32{
+	"UNKNOWN":   0,
+	"TTY_INFO":  1,
+	"HEARTBEAT": 2,
+}
+
+func (x ProcessIO_Control_Type) Enum() *ProcessIO_Control_Type {
+	p := new(ProcessIO_Control_Type)
+	*p = x
+	return p
+}
+func (x ProcessIO_Control_Type) MarshalJSON() ([]byte, error) {
+	return proto.MarshalJSONEnum(ProcessIO_Control_Type_name, int32(x))
+}
+func (x *ProcessIO_Control_Type) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(ProcessIO_Control_Type_value, data, "ProcessIO_Control_Type")
+	if err != nil {
+		return err
+	}
+	*x = ProcessIO_Control_Type(value)
+	return nil
+}
+
 // *
 // Calls that can be sent to the v1 agent API.
 //
@@ -197,14 +356,17 @@ func (x *Response_Type) UnmarshalJSON(data []byte) error {
 // trick, see
 // https://developers.google.com/protocol-buffers/docs/techniques#union.
 type Call struct {
-	Type                  *Call_Type                  `protobuf:"varint,1,opt,name=type,enum=mesos.agent.Call_Type" json:"type,omitempty"`
-	GetMetrics            *Call_GetMetrics            `protobuf:"bytes,2,opt,name=get_metrics" json:"get_metrics,omitempty"`
-	SetLoggingLevel       *Call_SetLoggingLevel       `protobuf:"bytes,3,opt,name=set_logging_level" json:"set_logging_level,omitempty"`
-	ListFiles             *Call_ListFiles             `protobuf:"bytes,4,opt,name=list_files" json:"list_files,omitempty"`
-	ReadFile              *Call_ReadFile              `protobuf:"bytes,5,opt,name=read_file" json:"read_file,omitempty"`
-	LaunchNestedContainer *Call_LaunchNestedContainer `protobuf:"bytes,6,opt,name=launch_nested_container" json:"launch_nested_container,omitempty"`
-	WaitNestedContainer   *Call_WaitNestedContainer   `protobuf:"bytes,7,opt,name=wait_nested_container" json:"wait_nested_container,omitempty"`
-	KillNestedContainer   *Call_KillNestedContainer   `protobuf:"bytes,8,opt,name=kill_nested_container" json:"kill_nested_container,omitempty"`
+	Type                         *Call_Type                         `protobuf:"varint,1,opt,name=type,enum=mesos.agent.Call_Type" json:"type,omitempty"`
+	GetMetrics                   *Call_GetMetrics                   `protobuf:"bytes,2,opt,name=get_metrics" json:"get_metrics,omitempty"`
+	SetLoggingLevel              *Call_SetLoggingLevel              `protobuf:"bytes,3,opt,name=set_logging_level" json:"set_logging_level,omitempty"`
+	ListFiles                    *Call_ListFiles                    `protobuf:"bytes,4,opt,name=list_files" json:"list_files,omitempty"`
+	ReadFile                     *Call_ReadFile                     `protobuf:"bytes,5,opt,name=read_file" json:"read_file,omitempty"`
+	LaunchNestedContainer        *Call_LaunchNestedContainer        `protobuf:"bytes,6,opt,name=launch_nested_container" json:"launch_nested_container,omitempty"`
+	WaitNestedContainer          *Call_WaitNestedContainer          `protobuf:"bytes,7,opt,name=wait_nested_container" json:"wait_nested_container,omitempty"`
+	KillNestedContainer          *Call_KillNestedContainer          `protobuf:"bytes,8,opt,name=kill_nested_container" json:"kill_nested_container,omitempty"`
+	LaunchNestedContainerSession *Call_LaunchNestedContainerSession `protobuf:"bytes,9,opt,name=launch_nested_container_session" json:"launch_nested_container_session,omitempty"`
+	AttachContainerInput         *Call_AttachContainerInput         `protobuf:"bytes,10,opt,name=attach_container_input" json:"attach_container_input,omitempty"`
+	AttachContainerOutput        *Call_AttachContainerOutput        `protobuf:"bytes,11,opt,name=attach_container_output" json:"attach_container_output,omitempty"`
 }
 
 func (m *Call) Reset()      { *m = Call{} }
@@ -262,6 +424,27 @@ func (m *Call) GetWaitNestedContainer() *Call_WaitNestedContainer {
 func (m *Call) GetKillNestedContainer() *Call_KillNestedContainer {
 	if m != nil {
 		return m.KillNestedContainer
+	}
+	return nil
+}
+
+func (m *Call) GetLaunchNestedContainerSession() *Call_LaunchNestedContainerSession {
+	if m != nil {
+		return m.LaunchNestedContainerSession
+	}
+	return nil
+}
+
+func (m *Call) GetAttachContainerInput() *Call_AttachContainerInput {
+	if m != nil {
+		return m.AttachContainerInput
+	}
+	return nil
+}
+
+func (m *Call) GetAttachContainerOutput() *Call_AttachContainerOutput {
+	if m != nil {
+		return m.AttachContainerOutput
 	}
 	return nil
 }
@@ -418,6 +601,98 @@ func (m *Call_KillNestedContainer) Reset()      { *m = Call_KillNestedContainer{
 func (*Call_KillNestedContainer) ProtoMessage() {}
 
 func (m *Call_KillNestedContainer) GetContainerId() *mesos.ContainerID {
+	if m != nil {
+		return m.ContainerId
+	}
+	return nil
+}
+
+// Launches a nested container within an executor's tree of containers.
+// The differences between this call and `LaunchNestedContainer` are:
+// 1) The container's life-cycle is tied to the lifetime of the
+//    connection used to make this call, i.e., if the connection ever
+//    breaks, the container will be destroyed.
+// 2) The nested container shares the same namespaces and cgroups as
+//    its parent container.
+// 3) Results in a streaming response of type `ProcessIO`. So the call
+//    needs to be made on a persistent connection.
+type Call_LaunchNestedContainerSession struct {
+	ContainerId *mesos.ContainerID   `protobuf:"bytes,1,req,name=container_id" json:"container_id,omitempty"`
+	Command     *mesos.CommandInfo   `protobuf:"bytes,2,opt,name=command" json:"command,omitempty"`
+	Container   *mesos.ContainerInfo `protobuf:"bytes,3,opt,name=container" json:"container,omitempty"`
+}
+
+func (m *Call_LaunchNestedContainerSession) Reset()      { *m = Call_LaunchNestedContainerSession{} }
+func (*Call_LaunchNestedContainerSession) ProtoMessage() {}
+
+func (m *Call_LaunchNestedContainerSession) GetContainerId() *mesos.ContainerID {
+	if m != nil {
+		return m.ContainerId
+	}
+	return nil
+}
+
+func (m *Call_LaunchNestedContainerSession) GetCommand() *mesos.CommandInfo {
+	if m != nil {
+		return m.Command
+	}
+	return nil
+}
+
+func (m *Call_LaunchNestedContainerSession) GetContainer() *mesos.ContainerInfo {
+	if m != nil {
+		return m.Container
+	}
+	return nil
+}
+
+// Attaches the caller to the STDIN of the entry point of the container.
+// Clients can use this to stream input data to a container.
+// Note that this call needs to be made on a persistent connection by
+// streaming a CONTAINER_ID message followed by one or more PROCESS_IO
+// messages.
+type Call_AttachContainerInput struct {
+	Type        *Call_AttachContainerInput_Type `protobuf:"varint,1,opt,name=type,enum=mesos.agent.Call_AttachContainerInput_Type" json:"type,omitempty"`
+	ContainerId *mesos.ContainerID              `protobuf:"bytes,2,opt,name=container_id" json:"container_id,omitempty"`
+	ProcessIo   *ProcessIO                      `protobuf:"bytes,3,opt,name=process_io" json:"process_io,omitempty"`
+}
+
+func (m *Call_AttachContainerInput) Reset()      { *m = Call_AttachContainerInput{} }
+func (*Call_AttachContainerInput) ProtoMessage() {}
+
+func (m *Call_AttachContainerInput) GetType() Call_AttachContainerInput_Type {
+	if m != nil && m.Type != nil {
+		return *m.Type
+	}
+	return Call_AttachContainerInput_UNKNOWN
+}
+
+func (m *Call_AttachContainerInput) GetContainerId() *mesos.ContainerID {
+	if m != nil {
+		return m.ContainerId
+	}
+	return nil
+}
+
+func (m *Call_AttachContainerInput) GetProcessIo() *ProcessIO {
+	if m != nil {
+		return m.ProcessIo
+	}
+	return nil
+}
+
+// Attaches the caller to the STDOUT and STDERR of the entrypoint of
+// the container. Clients can use this to stream output/error from the
+// container. This call will result in a streaming response of `ProcessIO`;
+// so this call needs to be made on a persistent connection.
+type Call_AttachContainerOutput struct {
+	ContainerId *mesos.ContainerID `protobuf:"bytes,1,req,name=container_id" json:"container_id,omitempty"`
+}
+
+func (m *Call_AttachContainerOutput) Reset()      { *m = Call_AttachContainerOutput{} }
+func (*Call_AttachContainerOutput) ProtoMessage() {}
+
+func (m *Call_AttachContainerOutput) GetContainerId() *mesos.ContainerID {
 	if m != nil {
 		return m.ContainerId
 	}
@@ -908,9 +1183,115 @@ func (m *Response_WaitNestedContainer) GetExitStatus() int32 {
 	return 0
 }
 
+// *
+// Streaming response to `Call::LAUNCH_NESTED_CONTAINER_SESSION` and
+// `Call::ATTACH_CONTAINER_OUTPUT`.
+//
+// This message is also used to stream request data for
+// `Call::ATTACH_CONTAINER_INPUT`.
+type ProcessIO struct {
+	Type    *ProcessIO_Type    `protobuf:"varint,1,opt,name=type,enum=mesos.agent.ProcessIO_Type" json:"type,omitempty"`
+	Data    *ProcessIO_Data    `protobuf:"bytes,2,opt,name=data" json:"data,omitempty"`
+	Control *ProcessIO_Control `protobuf:"bytes,3,opt,name=control" json:"control,omitempty"`
+}
+
+func (m *ProcessIO) Reset()      { *m = ProcessIO{} }
+func (*ProcessIO) ProtoMessage() {}
+
+func (m *ProcessIO) GetType() ProcessIO_Type {
+	if m != nil && m.Type != nil {
+		return *m.Type
+	}
+	return ProcessIO_UNKNOWN
+}
+
+func (m *ProcessIO) GetData() *ProcessIO_Data {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+func (m *ProcessIO) GetControl() *ProcessIO_Control {
+	if m != nil {
+		return m.Control
+	}
+	return nil
+}
+
+type ProcessIO_Data struct {
+	Type *ProcessIO_Data_Type `protobuf:"varint,1,opt,name=type,enum=mesos.agent.ProcessIO_Data_Type" json:"type,omitempty"`
+	Data []byte               `protobuf:"bytes,2,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *ProcessIO_Data) Reset()      { *m = ProcessIO_Data{} }
+func (*ProcessIO_Data) ProtoMessage() {}
+
+func (m *ProcessIO_Data) GetType() ProcessIO_Data_Type {
+	if m != nil && m.Type != nil {
+		return *m.Type
+	}
+	return ProcessIO_Data_UNKNOWN
+}
+
+func (m *ProcessIO_Data) GetData() []byte {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type ProcessIO_Control struct {
+	Type      *ProcessIO_Control_Type      `protobuf:"varint,1,opt,name=type,enum=mesos.agent.ProcessIO_Control_Type" json:"type,omitempty"`
+	TtyInfo   *mesos.TTYInfo               `protobuf:"bytes,2,opt,name=tty_info" json:"tty_info,omitempty"`
+	Heartbeat *ProcessIO_Control_Heartbeat `protobuf:"bytes,3,opt,name=heartbeat" json:"heartbeat,omitempty"`
+}
+
+func (m *ProcessIO_Control) Reset()      { *m = ProcessIO_Control{} }
+func (*ProcessIO_Control) ProtoMessage() {}
+
+func (m *ProcessIO_Control) GetType() ProcessIO_Control_Type {
+	if m != nil && m.Type != nil {
+		return *m.Type
+	}
+	return ProcessIO_Control_UNKNOWN
+}
+
+func (m *ProcessIO_Control) GetTtyInfo() *mesos.TTYInfo {
+	if m != nil {
+		return m.TtyInfo
+	}
+	return nil
+}
+
+func (m *ProcessIO_Control) GetHeartbeat() *ProcessIO_Control_Heartbeat {
+	if m != nil {
+		return m.Heartbeat
+	}
+	return nil
+}
+
+type ProcessIO_Control_Heartbeat struct {
+	Interval *mesos.DurationInfo `protobuf:"bytes,1,opt,name=interval" json:"interval,omitempty"`
+}
+
+func (m *ProcessIO_Control_Heartbeat) Reset()      { *m = ProcessIO_Control_Heartbeat{} }
+func (*ProcessIO_Control_Heartbeat) ProtoMessage() {}
+
+func (m *ProcessIO_Control_Heartbeat) GetInterval() *mesos.DurationInfo {
+	if m != nil {
+		return m.Interval
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterEnum("mesos.agent.Call_Type", Call_Type_name, Call_Type_value)
+	proto.RegisterEnum("mesos.agent.Call_AttachContainerInput_Type", Call_AttachContainerInput_Type_name, Call_AttachContainerInput_Type_value)
 	proto.RegisterEnum("mesos.agent.Response_Type", Response_Type_name, Response_Type_value)
+	proto.RegisterEnum("mesos.agent.ProcessIO_Type", ProcessIO_Type_name, ProcessIO_Type_value)
+	proto.RegisterEnum("mesos.agent.ProcessIO_Data_Type", ProcessIO_Data_Type_name, ProcessIO_Data_Type_value)
+	proto.RegisterEnum("mesos.agent.ProcessIO_Control_Type", ProcessIO_Control_Type_name, ProcessIO_Control_Type_value)
 }
 func (x Call_Type) String() string {
 	s, ok := Call_Type_name[int32(x)]
@@ -919,8 +1300,36 @@ func (x Call_Type) String() string {
 	}
 	return strconv.Itoa(int(x))
 }
+func (x Call_AttachContainerInput_Type) String() string {
+	s, ok := Call_AttachContainerInput_Type_name[int32(x)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(x))
+}
 func (x Response_Type) String() string {
 	s, ok := Response_Type_name[int32(x)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(x))
+}
+func (x ProcessIO_Type) String() string {
+	s, ok := ProcessIO_Type_name[int32(x)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(x))
+}
+func (x ProcessIO_Data_Type) String() string {
+	s, ok := ProcessIO_Data_Type_name[int32(x)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(x))
+}
+func (x ProcessIO_Control_Type) String() string {
+	s, ok := ProcessIO_Control_Type_name[int32(x)]
 	if ok {
 		return s
 	}
@@ -976,6 +1385,15 @@ func (this *Call) VerboseEqual(that interface{}) error {
 	if !this.KillNestedContainer.Equal(that1.KillNestedContainer) {
 		return fmt.Errorf("KillNestedContainer this(%v) Not Equal that(%v)", this.KillNestedContainer, that1.KillNestedContainer)
 	}
+	if !this.LaunchNestedContainerSession.Equal(that1.LaunchNestedContainerSession) {
+		return fmt.Errorf("LaunchNestedContainerSession this(%v) Not Equal that(%v)", this.LaunchNestedContainerSession, that1.LaunchNestedContainerSession)
+	}
+	if !this.AttachContainerInput.Equal(that1.AttachContainerInput) {
+		return fmt.Errorf("AttachContainerInput this(%v) Not Equal that(%v)", this.AttachContainerInput, that1.AttachContainerInput)
+	}
+	if !this.AttachContainerOutput.Equal(that1.AttachContainerOutput) {
+		return fmt.Errorf("AttachContainerOutput this(%v) Not Equal that(%v)", this.AttachContainerOutput, that1.AttachContainerOutput)
+	}
 	return nil
 }
 func (this *Call) Equal(that interface{}) bool {
@@ -1026,6 +1444,15 @@ func (this *Call) Equal(that interface{}) bool {
 		return false
 	}
 	if !this.KillNestedContainer.Equal(that1.KillNestedContainer) {
+		return false
+	}
+	if !this.LaunchNestedContainerSession.Equal(that1.LaunchNestedContainerSession) {
+		return false
+	}
+	if !this.AttachContainerInput.Equal(that1.AttachContainerInput) {
+		return false
+	}
+	if !this.AttachContainerOutput.Equal(that1.AttachContainerOutput) {
 		return false
 	}
 	return true
@@ -1418,6 +1845,192 @@ func (this *Call_KillNestedContainer) Equal(that interface{}) bool {
 	}
 
 	that1, ok := that.(*Call_KillNestedContainer)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.ContainerId.Equal(that1.ContainerId) {
+		return false
+	}
+	return true
+}
+func (this *Call_LaunchNestedContainerSession) VerboseEqual(that interface{}) error {
+	if that == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that == nil && this != nil")
+	}
+
+	that1, ok := that.(*Call_LaunchNestedContainerSession)
+	if !ok {
+		return fmt.Errorf("that is not of type *Call_LaunchNestedContainerSession")
+	}
+	if that1 == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that is type *Call_LaunchNestedContainerSession but is nil && this != nil")
+	} else if this == nil {
+		return fmt.Errorf("that is type *Call_LaunchNestedContainerSessionbut is not nil && this == nil")
+	}
+	if !this.ContainerId.Equal(that1.ContainerId) {
+		return fmt.Errorf("ContainerId this(%v) Not Equal that(%v)", this.ContainerId, that1.ContainerId)
+	}
+	if !this.Command.Equal(that1.Command) {
+		return fmt.Errorf("Command this(%v) Not Equal that(%v)", this.Command, that1.Command)
+	}
+	if !this.Container.Equal(that1.Container) {
+		return fmt.Errorf("Container this(%v) Not Equal that(%v)", this.Container, that1.Container)
+	}
+	return nil
+}
+func (this *Call_LaunchNestedContainerSession) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*Call_LaunchNestedContainerSession)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.ContainerId.Equal(that1.ContainerId) {
+		return false
+	}
+	if !this.Command.Equal(that1.Command) {
+		return false
+	}
+	if !this.Container.Equal(that1.Container) {
+		return false
+	}
+	return true
+}
+func (this *Call_AttachContainerInput) VerboseEqual(that interface{}) error {
+	if that == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that == nil && this != nil")
+	}
+
+	that1, ok := that.(*Call_AttachContainerInput)
+	if !ok {
+		return fmt.Errorf("that is not of type *Call_AttachContainerInput")
+	}
+	if that1 == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that is type *Call_AttachContainerInput but is nil && this != nil")
+	} else if this == nil {
+		return fmt.Errorf("that is type *Call_AttachContainerInputbut is not nil && this == nil")
+	}
+	if this.Type != nil && that1.Type != nil {
+		if *this.Type != *that1.Type {
+			return fmt.Errorf("Type this(%v) Not Equal that(%v)", *this.Type, *that1.Type)
+		}
+	} else if this.Type != nil {
+		return fmt.Errorf("this.Type == nil && that.Type != nil")
+	} else if that1.Type != nil {
+		return fmt.Errorf("Type this(%v) Not Equal that(%v)", this.Type, that1.Type)
+	}
+	if !this.ContainerId.Equal(that1.ContainerId) {
+		return fmt.Errorf("ContainerId this(%v) Not Equal that(%v)", this.ContainerId, that1.ContainerId)
+	}
+	if !this.ProcessIo.Equal(that1.ProcessIo) {
+		return fmt.Errorf("ProcessIo this(%v) Not Equal that(%v)", this.ProcessIo, that1.ProcessIo)
+	}
+	return nil
+}
+func (this *Call_AttachContainerInput) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*Call_AttachContainerInput)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Type != nil && that1.Type != nil {
+		if *this.Type != *that1.Type {
+			return false
+		}
+	} else if this.Type != nil {
+		return false
+	} else if that1.Type != nil {
+		return false
+	}
+	if !this.ContainerId.Equal(that1.ContainerId) {
+		return false
+	}
+	if !this.ProcessIo.Equal(that1.ProcessIo) {
+		return false
+	}
+	return true
+}
+func (this *Call_AttachContainerOutput) VerboseEqual(that interface{}) error {
+	if that == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that == nil && this != nil")
+	}
+
+	that1, ok := that.(*Call_AttachContainerOutput)
+	if !ok {
+		return fmt.Errorf("that is not of type *Call_AttachContainerOutput")
+	}
+	if that1 == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that is type *Call_AttachContainerOutput but is nil && this != nil")
+	} else if this == nil {
+		return fmt.Errorf("that is type *Call_AttachContainerOutputbut is not nil && this == nil")
+	}
+	if !this.ContainerId.Equal(that1.ContainerId) {
+		return fmt.Errorf("ContainerId this(%v) Not Equal that(%v)", this.ContainerId, that1.ContainerId)
+	}
+	return nil
+}
+func (this *Call_AttachContainerOutput) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*Call_AttachContainerOutput)
 	if !ok {
 		return false
 	}
@@ -2636,11 +3249,277 @@ func (this *Response_WaitNestedContainer) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *ProcessIO) VerboseEqual(that interface{}) error {
+	if that == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that == nil && this != nil")
+	}
+
+	that1, ok := that.(*ProcessIO)
+	if !ok {
+		return fmt.Errorf("that is not of type *ProcessIO")
+	}
+	if that1 == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that is type *ProcessIO but is nil && this != nil")
+	} else if this == nil {
+		return fmt.Errorf("that is type *ProcessIObut is not nil && this == nil")
+	}
+	if this.Type != nil && that1.Type != nil {
+		if *this.Type != *that1.Type {
+			return fmt.Errorf("Type this(%v) Not Equal that(%v)", *this.Type, *that1.Type)
+		}
+	} else if this.Type != nil {
+		return fmt.Errorf("this.Type == nil && that.Type != nil")
+	} else if that1.Type != nil {
+		return fmt.Errorf("Type this(%v) Not Equal that(%v)", this.Type, that1.Type)
+	}
+	if !this.Data.Equal(that1.Data) {
+		return fmt.Errorf("Data this(%v) Not Equal that(%v)", this.Data, that1.Data)
+	}
+	if !this.Control.Equal(that1.Control) {
+		return fmt.Errorf("Control this(%v) Not Equal that(%v)", this.Control, that1.Control)
+	}
+	return nil
+}
+func (this *ProcessIO) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ProcessIO)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Type != nil && that1.Type != nil {
+		if *this.Type != *that1.Type {
+			return false
+		}
+	} else if this.Type != nil {
+		return false
+	} else if that1.Type != nil {
+		return false
+	}
+	if !this.Data.Equal(that1.Data) {
+		return false
+	}
+	if !this.Control.Equal(that1.Control) {
+		return false
+	}
+	return true
+}
+func (this *ProcessIO_Data) VerboseEqual(that interface{}) error {
+	if that == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that == nil && this != nil")
+	}
+
+	that1, ok := that.(*ProcessIO_Data)
+	if !ok {
+		return fmt.Errorf("that is not of type *ProcessIO_Data")
+	}
+	if that1 == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that is type *ProcessIO_Data but is nil && this != nil")
+	} else if this == nil {
+		return fmt.Errorf("that is type *ProcessIO_Databut is not nil && this == nil")
+	}
+	if this.Type != nil && that1.Type != nil {
+		if *this.Type != *that1.Type {
+			return fmt.Errorf("Type this(%v) Not Equal that(%v)", *this.Type, *that1.Type)
+		}
+	} else if this.Type != nil {
+		return fmt.Errorf("this.Type == nil && that.Type != nil")
+	} else if that1.Type != nil {
+		return fmt.Errorf("Type this(%v) Not Equal that(%v)", this.Type, that1.Type)
+	}
+	if !bytes.Equal(this.Data, that1.Data) {
+		return fmt.Errorf("Data this(%v) Not Equal that(%v)", this.Data, that1.Data)
+	}
+	return nil
+}
+func (this *ProcessIO_Data) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ProcessIO_Data)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Type != nil && that1.Type != nil {
+		if *this.Type != *that1.Type {
+			return false
+		}
+	} else if this.Type != nil {
+		return false
+	} else if that1.Type != nil {
+		return false
+	}
+	if !bytes.Equal(this.Data, that1.Data) {
+		return false
+	}
+	return true
+}
+func (this *ProcessIO_Control) VerboseEqual(that interface{}) error {
+	if that == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that == nil && this != nil")
+	}
+
+	that1, ok := that.(*ProcessIO_Control)
+	if !ok {
+		return fmt.Errorf("that is not of type *ProcessIO_Control")
+	}
+	if that1 == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that is type *ProcessIO_Control but is nil && this != nil")
+	} else if this == nil {
+		return fmt.Errorf("that is type *ProcessIO_Controlbut is not nil && this == nil")
+	}
+	if this.Type != nil && that1.Type != nil {
+		if *this.Type != *that1.Type {
+			return fmt.Errorf("Type this(%v) Not Equal that(%v)", *this.Type, *that1.Type)
+		}
+	} else if this.Type != nil {
+		return fmt.Errorf("this.Type == nil && that.Type != nil")
+	} else if that1.Type != nil {
+		return fmt.Errorf("Type this(%v) Not Equal that(%v)", this.Type, that1.Type)
+	}
+	if !this.TtyInfo.Equal(that1.TtyInfo) {
+		return fmt.Errorf("TtyInfo this(%v) Not Equal that(%v)", this.TtyInfo, that1.TtyInfo)
+	}
+	if !this.Heartbeat.Equal(that1.Heartbeat) {
+		return fmt.Errorf("Heartbeat this(%v) Not Equal that(%v)", this.Heartbeat, that1.Heartbeat)
+	}
+	return nil
+}
+func (this *ProcessIO_Control) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ProcessIO_Control)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Type != nil && that1.Type != nil {
+		if *this.Type != *that1.Type {
+			return false
+		}
+	} else if this.Type != nil {
+		return false
+	} else if that1.Type != nil {
+		return false
+	}
+	if !this.TtyInfo.Equal(that1.TtyInfo) {
+		return false
+	}
+	if !this.Heartbeat.Equal(that1.Heartbeat) {
+		return false
+	}
+	return true
+}
+func (this *ProcessIO_Control_Heartbeat) VerboseEqual(that interface{}) error {
+	if that == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that == nil && this != nil")
+	}
+
+	that1, ok := that.(*ProcessIO_Control_Heartbeat)
+	if !ok {
+		return fmt.Errorf("that is not of type *ProcessIO_Control_Heartbeat")
+	}
+	if that1 == nil {
+		if this == nil {
+			return nil
+		}
+		return fmt.Errorf("that is type *ProcessIO_Control_Heartbeat but is nil && this != nil")
+	} else if this == nil {
+		return fmt.Errorf("that is type *ProcessIO_Control_Heartbeatbut is not nil && this == nil")
+	}
+	if !this.Interval.Equal(that1.Interval) {
+		return fmt.Errorf("Interval this(%v) Not Equal that(%v)", this.Interval, that1.Interval)
+	}
+	return nil
+}
+func (this *ProcessIO_Control_Heartbeat) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ProcessIO_Control_Heartbeat)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Interval.Equal(that1.Interval) {
+		return false
+	}
+	return true
+}
 func (this *Call) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 12)
+	s := make([]string, 0, 15)
 	s = append(s, "&agent.Call{")
 	if this.Type != nil {
 		s = append(s, "Type: "+valueToGoStringAgent(this.Type, "agent.Call_Type")+",\n")
@@ -2665,6 +3544,15 @@ func (this *Call) GoString() string {
 	}
 	if this.KillNestedContainer != nil {
 		s = append(s, "KillNestedContainer: "+fmt.Sprintf("%#v", this.KillNestedContainer)+",\n")
+	}
+	if this.LaunchNestedContainerSession != nil {
+		s = append(s, "LaunchNestedContainerSession: "+fmt.Sprintf("%#v", this.LaunchNestedContainerSession)+",\n")
+	}
+	if this.AttachContainerInput != nil {
+		s = append(s, "AttachContainerInput: "+fmt.Sprintf("%#v", this.AttachContainerInput)+",\n")
+	}
+	if this.AttachContainerOutput != nil {
+		s = append(s, "AttachContainerOutput: "+fmt.Sprintf("%#v", this.AttachContainerOutput)+",\n")
 	}
 	s = append(s, "}")
 	return strings.Join(s, "")
@@ -2756,6 +3644,54 @@ func (this *Call_KillNestedContainer) GoString() string {
 	}
 	s := make([]string, 0, 5)
 	s = append(s, "&agent.Call_KillNestedContainer{")
+	if this.ContainerId != nil {
+		s = append(s, "ContainerId: "+fmt.Sprintf("%#v", this.ContainerId)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *Call_LaunchNestedContainerSession) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 7)
+	s = append(s, "&agent.Call_LaunchNestedContainerSession{")
+	if this.ContainerId != nil {
+		s = append(s, "ContainerId: "+fmt.Sprintf("%#v", this.ContainerId)+",\n")
+	}
+	if this.Command != nil {
+		s = append(s, "Command: "+fmt.Sprintf("%#v", this.Command)+",\n")
+	}
+	if this.Container != nil {
+		s = append(s, "Container: "+fmt.Sprintf("%#v", this.Container)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *Call_AttachContainerInput) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 7)
+	s = append(s, "&agent.Call_AttachContainerInput{")
+	if this.Type != nil {
+		s = append(s, "Type: "+valueToGoStringAgent(this.Type, "agent.Call_AttachContainerInput_Type")+",\n")
+	}
+	if this.ContainerId != nil {
+		s = append(s, "ContainerId: "+fmt.Sprintf("%#v", this.ContainerId)+",\n")
+	}
+	if this.ProcessIo != nil {
+		s = append(s, "ProcessIo: "+fmt.Sprintf("%#v", this.ProcessIo)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *Call_AttachContainerOutput) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&agent.Call_AttachContainerOutput{")
 	if this.ContainerId != nil {
 		s = append(s, "ContainerId: "+fmt.Sprintf("%#v", this.ContainerId)+",\n")
 	}
@@ -3045,6 +3981,69 @@ func (this *Response_WaitNestedContainer) GoString() string {
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
+func (this *ProcessIO) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 7)
+	s = append(s, "&agent.ProcessIO{")
+	if this.Type != nil {
+		s = append(s, "Type: "+valueToGoStringAgent(this.Type, "agent.ProcessIO_Type")+",\n")
+	}
+	if this.Data != nil {
+		s = append(s, "Data: "+fmt.Sprintf("%#v", this.Data)+",\n")
+	}
+	if this.Control != nil {
+		s = append(s, "Control: "+fmt.Sprintf("%#v", this.Control)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ProcessIO_Data) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&agent.ProcessIO_Data{")
+	if this.Type != nil {
+		s = append(s, "Type: "+valueToGoStringAgent(this.Type, "agent.ProcessIO_Data_Type")+",\n")
+	}
+	if this.Data != nil {
+		s = append(s, "Data: "+valueToGoStringAgent(this.Data, "byte")+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ProcessIO_Control) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 7)
+	s = append(s, "&agent.ProcessIO_Control{")
+	if this.Type != nil {
+		s = append(s, "Type: "+valueToGoStringAgent(this.Type, "agent.ProcessIO_Control_Type")+",\n")
+	}
+	if this.TtyInfo != nil {
+		s = append(s, "TtyInfo: "+fmt.Sprintf("%#v", this.TtyInfo)+",\n")
+	}
+	if this.Heartbeat != nil {
+		s = append(s, "Heartbeat: "+fmt.Sprintf("%#v", this.Heartbeat)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ProcessIO_Control_Heartbeat) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&agent.ProcessIO_Control_Heartbeat{")
+	if this.Interval != nil {
+		s = append(s, "Interval: "+fmt.Sprintf("%#v", this.Interval)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
 func valueToGoStringAgent(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -3160,6 +4159,36 @@ func (m *Call) MarshalTo(data []byte) (int, error) {
 		}
 		i += n7
 	}
+	if m.LaunchNestedContainerSession != nil {
+		data[i] = 0x4a
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.LaunchNestedContainerSession.Size()))
+		n8, err := m.LaunchNestedContainerSession.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n8
+	}
+	if m.AttachContainerInput != nil {
+		data[i] = 0x52
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.AttachContainerInput.Size()))
+		n9, err := m.AttachContainerInput.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
+	}
+	if m.AttachContainerOutput != nil {
+		data[i] = 0x5a
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.AttachContainerOutput.Size()))
+		n10, err := m.AttachContainerOutput.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
 	return i, nil
 }
 
@@ -3182,11 +4211,11 @@ func (m *Call_GetMetrics) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.Timeout.Size()))
-		n8, err := m.Timeout.MarshalTo(data[i:])
+		n11, err := m.Timeout.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n8
+		i += n11
 	}
 	return i, nil
 }
@@ -3219,11 +4248,11 @@ func (m *Call_SetLoggingLevel) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x12
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.Duration.Size()))
-		n9, err := m.Duration.MarshalTo(data[i:])
+		n12, err := m.Duration.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
+		i += n12
 	}
 	return i, nil
 }
@@ -3303,31 +4332,31 @@ func (m *Call_LaunchNestedContainer) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.ContainerId.Size()))
-		n10, err := m.ContainerId.MarshalTo(data[i:])
+		n13, err := m.ContainerId.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n13
 	}
 	if m.Command != nil {
 		data[i] = 0x12
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.Command.Size()))
-		n11, err := m.Command.MarshalTo(data[i:])
+		n14, err := m.Command.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n14
 	}
 	if m.Container != nil {
 		data[i] = 0x1a
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.Container.Size()))
-		n12, err := m.Container.MarshalTo(data[i:])
+		n15, err := m.Container.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n15
 	}
 	return i, nil
 }
@@ -3353,11 +4382,11 @@ func (m *Call_WaitNestedContainer) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.ContainerId.Size()))
-		n13, err := m.ContainerId.MarshalTo(data[i:])
+		n16, err := m.ContainerId.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n16
 	}
 	return i, nil
 }
@@ -3383,11 +4412,134 @@ func (m *Call_KillNestedContainer) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.ContainerId.Size()))
-		n14, err := m.ContainerId.MarshalTo(data[i:])
+		n17, err := m.ContainerId.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n17
+	}
+	return i, nil
+}
+
+func (m *Call_LaunchNestedContainerSession) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *Call_LaunchNestedContainerSession) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ContainerId == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("container_id")
+	} else {
+		data[i] = 0xa
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.ContainerId.Size()))
+		n18, err := m.ContainerId.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n18
+	}
+	if m.Command != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.Command.Size()))
+		n19, err := m.Command.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n19
+	}
+	if m.Container != nil {
+		data[i] = 0x1a
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.Container.Size()))
+		n20, err := m.Container.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n20
+	}
+	return i, nil
+}
+
+func (m *Call_AttachContainerInput) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *Call_AttachContainerInput) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Type != nil {
+		data[i] = 0x8
+		i++
+		i = encodeVarintAgent(data, i, uint64(*m.Type))
+	}
+	if m.ContainerId != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.ContainerId.Size()))
+		n21, err := m.ContainerId.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n21
+	}
+	if m.ProcessIo != nil {
+		data[i] = 0x1a
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.ProcessIo.Size()))
+		n22, err := m.ProcessIo.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n22
+	}
+	return i, nil
+}
+
+func (m *Call_AttachContainerOutput) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *Call_AttachContainerOutput) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ContainerId == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("container_id")
+	} else {
+		data[i] = 0xa
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.ContainerId.Size()))
+		n23, err := m.ContainerId.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n23
 	}
 	return i, nil
 }
@@ -3416,131 +4568,131 @@ func (m *Response) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x12
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.GetHealth.Size()))
-		n15, err := m.GetHealth.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n15
-	}
-	if m.GetFlags != nil {
-		data[i] = 0x1a
-		i++
-		i = encodeVarintAgent(data, i, uint64(m.GetFlags.Size()))
-		n16, err := m.GetFlags.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n16
-	}
-	if m.GetVersion != nil {
-		data[i] = 0x22
-		i++
-		i = encodeVarintAgent(data, i, uint64(m.GetVersion.Size()))
-		n17, err := m.GetVersion.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n17
-	}
-	if m.GetMetrics != nil {
-		data[i] = 0x2a
-		i++
-		i = encodeVarintAgent(data, i, uint64(m.GetMetrics.Size()))
-		n18, err := m.GetMetrics.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n18
-	}
-	if m.GetLoggingLevel != nil {
-		data[i] = 0x32
-		i++
-		i = encodeVarintAgent(data, i, uint64(m.GetLoggingLevel.Size()))
-		n19, err := m.GetLoggingLevel.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n19
-	}
-	if m.ListFiles != nil {
-		data[i] = 0x3a
-		i++
-		i = encodeVarintAgent(data, i, uint64(m.ListFiles.Size()))
-		n20, err := m.ListFiles.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n20
-	}
-	if m.ReadFile != nil {
-		data[i] = 0x42
-		i++
-		i = encodeVarintAgent(data, i, uint64(m.ReadFile.Size()))
-		n21, err := m.ReadFile.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n21
-	}
-	if m.GetState != nil {
-		data[i] = 0x4a
-		i++
-		i = encodeVarintAgent(data, i, uint64(m.GetState.Size()))
-		n22, err := m.GetState.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n22
-	}
-	if m.GetContainers != nil {
-		data[i] = 0x52
-		i++
-		i = encodeVarintAgent(data, i, uint64(m.GetContainers.Size()))
-		n23, err := m.GetContainers.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n23
-	}
-	if m.GetFrameworks != nil {
-		data[i] = 0x5a
-		i++
-		i = encodeVarintAgent(data, i, uint64(m.GetFrameworks.Size()))
-		n24, err := m.GetFrameworks.MarshalTo(data[i:])
+		n24, err := m.GetHealth.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n24
 	}
-	if m.GetExecutors != nil {
-		data[i] = 0x62
+	if m.GetFlags != nil {
+		data[i] = 0x1a
 		i++
-		i = encodeVarintAgent(data, i, uint64(m.GetExecutors.Size()))
-		n25, err := m.GetExecutors.MarshalTo(data[i:])
+		i = encodeVarintAgent(data, i, uint64(m.GetFlags.Size()))
+		n25, err := m.GetFlags.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n25
 	}
-	if m.GetTasks != nil {
-		data[i] = 0x6a
+	if m.GetVersion != nil {
+		data[i] = 0x22
 		i++
-		i = encodeVarintAgent(data, i, uint64(m.GetTasks.Size()))
-		n26, err := m.GetTasks.MarshalTo(data[i:])
+		i = encodeVarintAgent(data, i, uint64(m.GetVersion.Size()))
+		n26, err := m.GetVersion.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n26
 	}
-	if m.WaitNestedContainer != nil {
-		data[i] = 0x72
+	if m.GetMetrics != nil {
+		data[i] = 0x2a
 		i++
-		i = encodeVarintAgent(data, i, uint64(m.WaitNestedContainer.Size()))
-		n27, err := m.WaitNestedContainer.MarshalTo(data[i:])
+		i = encodeVarintAgent(data, i, uint64(m.GetMetrics.Size()))
+		n27, err := m.GetMetrics.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n27
+	}
+	if m.GetLoggingLevel != nil {
+		data[i] = 0x32
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.GetLoggingLevel.Size()))
+		n28, err := m.GetLoggingLevel.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n28
+	}
+	if m.ListFiles != nil {
+		data[i] = 0x3a
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.ListFiles.Size()))
+		n29, err := m.ListFiles.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n29
+	}
+	if m.ReadFile != nil {
+		data[i] = 0x42
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.ReadFile.Size()))
+		n30, err := m.ReadFile.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n30
+	}
+	if m.GetState != nil {
+		data[i] = 0x4a
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.GetState.Size()))
+		n31, err := m.GetState.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n31
+	}
+	if m.GetContainers != nil {
+		data[i] = 0x52
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.GetContainers.Size()))
+		n32, err := m.GetContainers.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n32
+	}
+	if m.GetFrameworks != nil {
+		data[i] = 0x5a
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.GetFrameworks.Size()))
+		n33, err := m.GetFrameworks.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n33
+	}
+	if m.GetExecutors != nil {
+		data[i] = 0x62
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.GetExecutors.Size()))
+		n34, err := m.GetExecutors.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n34
+	}
+	if m.GetTasks != nil {
+		data[i] = 0x6a
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.GetTasks.Size()))
+		n35, err := m.GetTasks.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n35
+	}
+	if m.WaitNestedContainer != nil {
+		data[i] = 0x72
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.WaitNestedContainer.Size()))
+		n36, err := m.WaitNestedContainer.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n36
 	}
 	return i, nil
 }
@@ -3626,11 +4778,11 @@ func (m *Response_GetVersion) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.VersionInfo.Size()))
-		n28, err := m.VersionInfo.MarshalTo(data[i:])
+		n37, err := m.VersionInfo.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n28
+		i += n37
 	}
 	return i, nil
 }
@@ -3768,31 +4920,31 @@ func (m *Response_GetState) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.GetTasks.Size()))
-		n29, err := m.GetTasks.MarshalTo(data[i:])
+		n38, err := m.GetTasks.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n29
+		i += n38
 	}
 	if m.GetExecutors != nil {
 		data[i] = 0x12
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.GetExecutors.Size()))
-		n30, err := m.GetExecutors.MarshalTo(data[i:])
+		n39, err := m.GetExecutors.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n30
+		i += n39
 	}
 	if m.GetFrameworks != nil {
 		data[i] = 0x1a
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.GetFrameworks.Size()))
-		n31, err := m.GetFrameworks.MarshalTo(data[i:])
+		n40, err := m.GetFrameworks.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n31
+		i += n40
 	}
 	return i, nil
 }
@@ -3848,11 +5000,11 @@ func (m *Response_GetContainers_Container) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.FrameworkId.Size()))
-		n32, err := m.FrameworkId.MarshalTo(data[i:])
+		n41, err := m.FrameworkId.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n32
+		i += n41
 	}
 	if m.ExecutorId == nil {
 		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("executor_id")
@@ -3860,11 +5012,11 @@ func (m *Response_GetContainers_Container) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x12
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.ExecutorId.Size()))
-		n33, err := m.ExecutorId.MarshalTo(data[i:])
+		n42, err := m.ExecutorId.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n33
+		i += n42
 	}
 	if m.ExecutorName == nil {
 		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("executor_name")
@@ -3880,31 +5032,31 @@ func (m *Response_GetContainers_Container) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x22
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.ContainerId.Size()))
-		n34, err := m.ContainerId.MarshalTo(data[i:])
+		n43, err := m.ContainerId.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n34
+		i += n43
 	}
 	if m.ContainerStatus != nil {
 		data[i] = 0x2a
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.ContainerStatus.Size()))
-		n35, err := m.ContainerStatus.MarshalTo(data[i:])
+		n44, err := m.ContainerStatus.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n35
+		i += n44
 	}
 	if m.ResourceStatistics != nil {
 		data[i] = 0x32
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.ResourceStatistics.Size()))
-		n36, err := m.ResourceStatistics.MarshalTo(data[i:])
+		n45, err := m.ResourceStatistics.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n36
+		i += n45
 	}
 	return i, nil
 }
@@ -3972,11 +5124,11 @@ func (m *Response_GetFrameworks_Framework) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.FrameworkInfo.Size()))
-		n37, err := m.FrameworkInfo.MarshalTo(data[i:])
+		n46, err := m.FrameworkInfo.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n37
+		i += n46
 	}
 	return i, nil
 }
@@ -4044,11 +5196,11 @@ func (m *Response_GetExecutors_Executor) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintAgent(data, i, uint64(m.ExecutorInfo.Size()))
-		n38, err := m.ExecutorInfo.MarshalTo(data[i:])
+		n47, err := m.ExecutorInfo.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n38
+		i += n47
 	}
 	return i, nil
 }
@@ -4154,6 +5306,149 @@ func (m *Response_WaitNestedContainer) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
+func (m *ProcessIO) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ProcessIO) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Type != nil {
+		data[i] = 0x8
+		i++
+		i = encodeVarintAgent(data, i, uint64(*m.Type))
+	}
+	if m.Data != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.Data.Size()))
+		n48, err := m.Data.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n48
+	}
+	if m.Control != nil {
+		data[i] = 0x1a
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.Control.Size()))
+		n49, err := m.Control.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n49
+	}
+	return i, nil
+}
+
+func (m *ProcessIO_Data) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ProcessIO_Data) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Type != nil {
+		data[i] = 0x8
+		i++
+		i = encodeVarintAgent(data, i, uint64(*m.Type))
+	}
+	if m.Data != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintAgent(data, i, uint64(len(m.Data)))
+		i += copy(data[i:], m.Data)
+	}
+	return i, nil
+}
+
+func (m *ProcessIO_Control) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ProcessIO_Control) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Type != nil {
+		data[i] = 0x8
+		i++
+		i = encodeVarintAgent(data, i, uint64(*m.Type))
+	}
+	if m.TtyInfo != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.TtyInfo.Size()))
+		n50, err := m.TtyInfo.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n50
+	}
+	if m.Heartbeat != nil {
+		data[i] = 0x1a
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.Heartbeat.Size()))
+		n51, err := m.Heartbeat.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n51
+	}
+	return i, nil
+}
+
+func (m *ProcessIO_Control_Heartbeat) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ProcessIO_Control_Heartbeat) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Interval != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintAgent(data, i, uint64(m.Interval.Size()))
+		n52, err := m.Interval.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n52
+	}
+	return i, nil
+}
+
 func encodeFixed64Agent(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -4184,7 +5479,7 @@ func encodeVarintAgent(data []byte, offset int, v uint64) int {
 func NewPopulatedCall(r randyAgent, easy bool) *Call {
 	this := &Call{}
 	if r.Intn(10) != 0 {
-		v1 := Call_Type([]int32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}[r.Intn(17)])
+		v1 := Call_Type([]int32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}[r.Intn(20)])
 		this.Type = &v1
 	}
 	if r.Intn(10) != 0 {
@@ -4207,6 +5502,15 @@ func NewPopulatedCall(r randyAgent, easy bool) *Call {
 	}
 	if r.Intn(10) != 0 {
 		this.KillNestedContainer = NewPopulatedCall_KillNestedContainer(r, easy)
+	}
+	if r.Intn(10) != 0 {
+		this.LaunchNestedContainerSession = NewPopulatedCall_LaunchNestedContainerSession(r, easy)
+	}
+	if r.Intn(10) != 0 {
+		this.AttachContainerInput = NewPopulatedCall_AttachContainerInput(r, easy)
+	}
+	if r.Intn(10) != 0 {
+		this.AttachContainerOutput = NewPopulatedCall_AttachContainerOutput(r, easy)
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -4282,11 +5586,50 @@ func NewPopulatedCall_KillNestedContainer(r randyAgent, easy bool) *Call_KillNes
 	return this
 }
 
+func NewPopulatedCall_LaunchNestedContainerSession(r randyAgent, easy bool) *Call_LaunchNestedContainerSession {
+	this := &Call_LaunchNestedContainerSession{}
+	this.ContainerId = mesos.NewPopulatedContainerID(r, easy)
+	if r.Intn(10) != 0 {
+		this.Command = mesos.NewPopulatedCommandInfo(r, easy)
+	}
+	if r.Intn(10) != 0 {
+		this.Container = mesos.NewPopulatedContainerInfo(r, easy)
+	}
+	if !easy && r.Intn(10) != 0 {
+	}
+	return this
+}
+
+func NewPopulatedCall_AttachContainerInput(r randyAgent, easy bool) *Call_AttachContainerInput {
+	this := &Call_AttachContainerInput{}
+	if r.Intn(10) != 0 {
+		v4 := Call_AttachContainerInput_Type([]int32{0, 1, 2}[r.Intn(3)])
+		this.Type = &v4
+	}
+	if r.Intn(10) != 0 {
+		this.ContainerId = mesos.NewPopulatedContainerID(r, easy)
+	}
+	if r.Intn(10) != 0 {
+		this.ProcessIo = NewPopulatedProcessIO(r, easy)
+	}
+	if !easy && r.Intn(10) != 0 {
+	}
+	return this
+}
+
+func NewPopulatedCall_AttachContainerOutput(r randyAgent, easy bool) *Call_AttachContainerOutput {
+	this := &Call_AttachContainerOutput{}
+	this.ContainerId = mesos.NewPopulatedContainerID(r, easy)
+	if !easy && r.Intn(10) != 0 {
+	}
+	return this
+}
+
 func NewPopulatedResponse(r randyAgent, easy bool) *Response {
 	this := &Response{}
 	if r.Intn(10) != 0 {
-		v4 := Response_Type([]int32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}[r.Intn(14)])
-		this.Type = &v4
+		v5 := Response_Type([]int32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}[r.Intn(14)])
+		this.Type = &v5
 	}
 	if r.Intn(10) != 0 {
 		this.GetHealth = NewPopulatedResponse_GetHealth(r, easy)
@@ -4334,8 +5677,8 @@ func NewPopulatedResponse(r randyAgent, easy bool) *Response {
 
 func NewPopulatedResponse_GetHealth(r randyAgent, easy bool) *Response_GetHealth {
 	this := &Response_GetHealth{}
-	v5 := bool(bool(r.Intn(2) == 0))
-	this.Healthy = &v5
+	v6 := bool(bool(r.Intn(2) == 0))
+	this.Healthy = &v6
 	if !easy && r.Intn(10) != 0 {
 	}
 	return this
@@ -4344,9 +5687,9 @@ func NewPopulatedResponse_GetHealth(r randyAgent, easy bool) *Response_GetHealth
 func NewPopulatedResponse_GetFlags(r randyAgent, easy bool) *Response_GetFlags {
 	this := &Response_GetFlags{}
 	if r.Intn(10) != 0 {
-		v6 := r.Intn(10)
-		this.Flags = make([]*mesos.Flag, v6)
-		for i := 0; i < v6; i++ {
+		v7 := r.Intn(10)
+		this.Flags = make([]*mesos.Flag, v7)
+		for i := 0; i < v7; i++ {
 			this.Flags[i] = mesos.NewPopulatedFlag(r, easy)
 		}
 	}
@@ -4366,9 +5709,9 @@ func NewPopulatedResponse_GetVersion(r randyAgent, easy bool) *Response_GetVersi
 func NewPopulatedResponse_GetMetrics(r randyAgent, easy bool) *Response_GetMetrics {
 	this := &Response_GetMetrics{}
 	if r.Intn(10) != 0 {
-		v7 := r.Intn(10)
-		this.Metrics = make([]*mesos.Metric, v7)
-		for i := 0; i < v7; i++ {
+		v8 := r.Intn(10)
+		this.Metrics = make([]*mesos.Metric, v8)
+		for i := 0; i < v8; i++ {
 			this.Metrics[i] = mesos.NewPopulatedMetric(r, easy)
 		}
 	}
@@ -4379,8 +5722,8 @@ func NewPopulatedResponse_GetMetrics(r randyAgent, easy bool) *Response_GetMetri
 
 func NewPopulatedResponse_GetLoggingLevel(r randyAgent, easy bool) *Response_GetLoggingLevel {
 	this := &Response_GetLoggingLevel{}
-	v8 := uint32(r.Uint32())
-	this.Level = &v8
+	v9 := uint32(r.Uint32())
+	this.Level = &v9
 	if !easy && r.Intn(10) != 0 {
 	}
 	return this
@@ -4389,9 +5732,9 @@ func NewPopulatedResponse_GetLoggingLevel(r randyAgent, easy bool) *Response_Get
 func NewPopulatedResponse_ListFiles(r randyAgent, easy bool) *Response_ListFiles {
 	this := &Response_ListFiles{}
 	if r.Intn(10) != 0 {
-		v9 := r.Intn(10)
-		this.FileInfos = make([]*mesos.FileInfo, v9)
-		for i := 0; i < v9; i++ {
+		v10 := r.Intn(10)
+		this.FileInfos = make([]*mesos.FileInfo, v10)
+		for i := 0; i < v10; i++ {
 			this.FileInfos[i] = mesos.NewPopulatedFileInfo(r, easy)
 		}
 	}
@@ -4403,9 +5746,9 @@ func NewPopulatedResponse_ListFiles(r randyAgent, easy bool) *Response_ListFiles
 func NewPopulatedResponse_ReadFile(r randyAgent, easy bool) *Response_ReadFile {
 	this := &Response_ReadFile{}
 	this.Size_ = uint64(uint64(r.Uint32()))
-	v10 := r.Intn(100)
-	this.Data = make([]byte, v10)
-	for i := 0; i < v10; i++ {
+	v11 := r.Intn(100)
+	this.Data = make([]byte, v11)
+	for i := 0; i < v11; i++ {
 		this.Data[i] = byte(r.Intn(256))
 	}
 	if !easy && r.Intn(10) != 0 {
@@ -4432,9 +5775,9 @@ func NewPopulatedResponse_GetState(r randyAgent, easy bool) *Response_GetState {
 func NewPopulatedResponse_GetContainers(r randyAgent, easy bool) *Response_GetContainers {
 	this := &Response_GetContainers{}
 	if r.Intn(10) != 0 {
-		v11 := r.Intn(10)
-		this.Containers = make([]*Response_GetContainers_Container, v11)
-		for i := 0; i < v11; i++ {
+		v12 := r.Intn(10)
+		this.Containers = make([]*Response_GetContainers_Container, v12)
+		for i := 0; i < v12; i++ {
 			this.Containers[i] = NewPopulatedResponse_GetContainers_Container(r, easy)
 		}
 	}
@@ -4447,8 +5790,8 @@ func NewPopulatedResponse_GetContainers_Container(r randyAgent, easy bool) *Resp
 	this := &Response_GetContainers_Container{}
 	this.FrameworkId = mesos.NewPopulatedFrameworkID(r, easy)
 	this.ExecutorId = mesos.NewPopulatedExecutorID(r, easy)
-	v12 := randStringAgent(r)
-	this.ExecutorName = &v12
+	v13 := randStringAgent(r)
+	this.ExecutorName = &v13
 	this.ContainerId = mesos.NewPopulatedContainerID(r, easy)
 	if r.Intn(10) != 0 {
 		this.ContainerStatus = mesos.NewPopulatedContainerStatus(r, easy)
@@ -4464,16 +5807,16 @@ func NewPopulatedResponse_GetContainers_Container(r randyAgent, easy bool) *Resp
 func NewPopulatedResponse_GetFrameworks(r randyAgent, easy bool) *Response_GetFrameworks {
 	this := &Response_GetFrameworks{}
 	if r.Intn(10) != 0 {
-		v13 := r.Intn(10)
-		this.Frameworks = make([]*Response_GetFrameworks_Framework, v13)
-		for i := 0; i < v13; i++ {
+		v14 := r.Intn(10)
+		this.Frameworks = make([]*Response_GetFrameworks_Framework, v14)
+		for i := 0; i < v14; i++ {
 			this.Frameworks[i] = NewPopulatedResponse_GetFrameworks_Framework(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v14 := r.Intn(10)
-		this.CompletedFrameworks = make([]*Response_GetFrameworks_Framework, v14)
-		for i := 0; i < v14; i++ {
+		v15 := r.Intn(10)
+		this.CompletedFrameworks = make([]*Response_GetFrameworks_Framework, v15)
+		for i := 0; i < v15; i++ {
 			this.CompletedFrameworks[i] = NewPopulatedResponse_GetFrameworks_Framework(r, easy)
 		}
 	}
@@ -4493,16 +5836,16 @@ func NewPopulatedResponse_GetFrameworks_Framework(r randyAgent, easy bool) *Resp
 func NewPopulatedResponse_GetExecutors(r randyAgent, easy bool) *Response_GetExecutors {
 	this := &Response_GetExecutors{}
 	if r.Intn(10) != 0 {
-		v15 := r.Intn(10)
-		this.Executors = make([]*Response_GetExecutors_Executor, v15)
-		for i := 0; i < v15; i++ {
+		v16 := r.Intn(10)
+		this.Executors = make([]*Response_GetExecutors_Executor, v16)
+		for i := 0; i < v16; i++ {
 			this.Executors[i] = NewPopulatedResponse_GetExecutors_Executor(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v16 := r.Intn(10)
-		this.CompletedExecutors = make([]*Response_GetExecutors_Executor, v16)
-		for i := 0; i < v16; i++ {
+		v17 := r.Intn(10)
+		this.CompletedExecutors = make([]*Response_GetExecutors_Executor, v17)
+		for i := 0; i < v17; i++ {
 			this.CompletedExecutors[i] = NewPopulatedResponse_GetExecutors_Executor(r, easy)
 		}
 	}
@@ -4522,37 +5865,37 @@ func NewPopulatedResponse_GetExecutors_Executor(r randyAgent, easy bool) *Respon
 func NewPopulatedResponse_GetTasks(r randyAgent, easy bool) *Response_GetTasks {
 	this := &Response_GetTasks{}
 	if r.Intn(10) != 0 {
-		v17 := r.Intn(10)
-		this.PendingTasks = make([]*mesos.Task, v17)
-		for i := 0; i < v17; i++ {
+		v18 := r.Intn(10)
+		this.PendingTasks = make([]*mesos.Task, v18)
+		for i := 0; i < v18; i++ {
 			this.PendingTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v18 := r.Intn(10)
-		this.QueuedTasks = make([]*mesos.Task, v18)
-		for i := 0; i < v18; i++ {
+		v19 := r.Intn(10)
+		this.QueuedTasks = make([]*mesos.Task, v19)
+		for i := 0; i < v19; i++ {
 			this.QueuedTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v19 := r.Intn(10)
-		this.LaunchedTasks = make([]*mesos.Task, v19)
-		for i := 0; i < v19; i++ {
+		v20 := r.Intn(10)
+		this.LaunchedTasks = make([]*mesos.Task, v20)
+		for i := 0; i < v20; i++ {
 			this.LaunchedTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v20 := r.Intn(10)
-		this.TerminatedTasks = make([]*mesos.Task, v20)
-		for i := 0; i < v20; i++ {
+		v21 := r.Intn(10)
+		this.TerminatedTasks = make([]*mesos.Task, v21)
+		for i := 0; i < v21; i++ {
 			this.TerminatedTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v21 := r.Intn(10)
-		this.CompletedTasks = make([]*mesos.Task, v21)
-		for i := 0; i < v21; i++ {
+		v22 := r.Intn(10)
+		this.CompletedTasks = make([]*mesos.Task, v22)
+		for i := 0; i < v22; i++ {
 			this.CompletedTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
@@ -4564,11 +5907,73 @@ func NewPopulatedResponse_GetTasks(r randyAgent, easy bool) *Response_GetTasks {
 func NewPopulatedResponse_WaitNestedContainer(r randyAgent, easy bool) *Response_WaitNestedContainer {
 	this := &Response_WaitNestedContainer{}
 	if r.Intn(10) != 0 {
-		v22 := int32(r.Int31())
+		v23 := int32(r.Int31())
 		if r.Intn(2) == 0 {
-			v22 *= -1
+			v23 *= -1
 		}
-		this.ExitStatus = &v22
+		this.ExitStatus = &v23
+	}
+	if !easy && r.Intn(10) != 0 {
+	}
+	return this
+}
+
+func NewPopulatedProcessIO(r randyAgent, easy bool) *ProcessIO {
+	this := &ProcessIO{}
+	if r.Intn(10) != 0 {
+		v24 := ProcessIO_Type([]int32{0, 1, 2}[r.Intn(3)])
+		this.Type = &v24
+	}
+	if r.Intn(10) != 0 {
+		this.Data = NewPopulatedProcessIO_Data(r, easy)
+	}
+	if r.Intn(10) != 0 {
+		this.Control = NewPopulatedProcessIO_Control(r, easy)
+	}
+	if !easy && r.Intn(10) != 0 {
+	}
+	return this
+}
+
+func NewPopulatedProcessIO_Data(r randyAgent, easy bool) *ProcessIO_Data {
+	this := &ProcessIO_Data{}
+	if r.Intn(10) != 0 {
+		v25 := ProcessIO_Data_Type([]int32{0, 1, 2, 3}[r.Intn(4)])
+		this.Type = &v25
+	}
+	if r.Intn(10) != 0 {
+		v26 := r.Intn(100)
+		this.Data = make([]byte, v26)
+		for i := 0; i < v26; i++ {
+			this.Data[i] = byte(r.Intn(256))
+		}
+	}
+	if !easy && r.Intn(10) != 0 {
+	}
+	return this
+}
+
+func NewPopulatedProcessIO_Control(r randyAgent, easy bool) *ProcessIO_Control {
+	this := &ProcessIO_Control{}
+	if r.Intn(10) != 0 {
+		v27 := ProcessIO_Control_Type([]int32{0, 1, 2}[r.Intn(3)])
+		this.Type = &v27
+	}
+	if r.Intn(10) != 0 {
+		this.TtyInfo = mesos.NewPopulatedTTYInfo(r, easy)
+	}
+	if r.Intn(10) != 0 {
+		this.Heartbeat = NewPopulatedProcessIO_Control_Heartbeat(r, easy)
+	}
+	if !easy && r.Intn(10) != 0 {
+	}
+	return this
+}
+
+func NewPopulatedProcessIO_Control_Heartbeat(r randyAgent, easy bool) *ProcessIO_Control_Heartbeat {
+	this := &ProcessIO_Control_Heartbeat{}
+	if r.Intn(10) != 0 {
+		this.Interval = mesos.NewPopulatedDurationInfo(r, easy)
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -4594,9 +5999,9 @@ func randUTF8RuneAgent(r randyAgent) rune {
 	return rune(ru + 61)
 }
 func randStringAgent(r randyAgent) string {
-	v23 := r.Intn(100)
-	tmps := make([]rune, v23)
-	for i := 0; i < v23; i++ {
+	v28 := r.Intn(100)
+	tmps := make([]rune, v28)
+	for i := 0; i < v28; i++ {
 		tmps[i] = randUTF8RuneAgent(r)
 	}
 	return string(tmps)
@@ -4618,11 +6023,11 @@ func randFieldAgent(data []byte, r randyAgent, fieldNumber int, wire int) []byte
 	switch wire {
 	case 0:
 		data = encodeVarintPopulateAgent(data, uint64(key))
-		v24 := r.Int63()
+		v29 := r.Int63()
 		if r.Intn(2) == 0 {
-			v24 *= -1
+			v29 *= -1
 		}
-		data = encodeVarintPopulateAgent(data, uint64(v24))
+		data = encodeVarintPopulateAgent(data, uint64(v29))
 	case 1:
 		data = encodeVarintPopulateAgent(data, uint64(key))
 		data = append(data, byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)))
@@ -4679,6 +6084,18 @@ func (m *Call) Size() (n int) {
 	}
 	if m.KillNestedContainer != nil {
 		l = m.KillNestedContainer.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	if m.LaunchNestedContainerSession != nil {
+		l = m.LaunchNestedContainerSession.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	if m.AttachContainerInput != nil {
+		l = m.AttachContainerInput.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	if m.AttachContainerOutput != nil {
+		l = m.AttachContainerOutput.Size()
 		n += 1 + l + sovAgent(uint64(l))
 	}
 	return n
@@ -4756,6 +6173,51 @@ func (m *Call_WaitNestedContainer) Size() (n int) {
 }
 
 func (m *Call_KillNestedContainer) Size() (n int) {
+	var l int
+	_ = l
+	if m.ContainerId != nil {
+		l = m.ContainerId.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	return n
+}
+
+func (m *Call_LaunchNestedContainerSession) Size() (n int) {
+	var l int
+	_ = l
+	if m.ContainerId != nil {
+		l = m.ContainerId.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	if m.Command != nil {
+		l = m.Command.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	if m.Container != nil {
+		l = m.Container.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	return n
+}
+
+func (m *Call_AttachContainerInput) Size() (n int) {
+	var l int
+	_ = l
+	if m.Type != nil {
+		n += 1 + sovAgent(uint64(*m.Type))
+	}
+	if m.ContainerId != nil {
+		l = m.ContainerId.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	if m.ProcessIo != nil {
+		l = m.ProcessIo.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	return n
+}
+
+func (m *Call_AttachContainerOutput) Size() (n int) {
 	var l int
 	_ = l
 	if m.ContainerId != nil {
@@ -5062,6 +6524,63 @@ func (m *Response_WaitNestedContainer) Size() (n int) {
 	return n
 }
 
+func (m *ProcessIO) Size() (n int) {
+	var l int
+	_ = l
+	if m.Type != nil {
+		n += 1 + sovAgent(uint64(*m.Type))
+	}
+	if m.Data != nil {
+		l = m.Data.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	if m.Control != nil {
+		l = m.Control.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	return n
+}
+
+func (m *ProcessIO_Data) Size() (n int) {
+	var l int
+	_ = l
+	if m.Type != nil {
+		n += 1 + sovAgent(uint64(*m.Type))
+	}
+	if m.Data != nil {
+		l = len(m.Data)
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	return n
+}
+
+func (m *ProcessIO_Control) Size() (n int) {
+	var l int
+	_ = l
+	if m.Type != nil {
+		n += 1 + sovAgent(uint64(*m.Type))
+	}
+	if m.TtyInfo != nil {
+		l = m.TtyInfo.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	if m.Heartbeat != nil {
+		l = m.Heartbeat.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	return n
+}
+
+func (m *ProcessIO_Control_Heartbeat) Size() (n int) {
+	var l int
+	_ = l
+	if m.Interval != nil {
+		l = m.Interval.Size()
+		n += 1 + l + sovAgent(uint64(l))
+	}
+	return n
+}
+
 func sovAgent(x uint64) (n int) {
 	for {
 		n++
@@ -5088,6 +6607,9 @@ func (this *Call) String() string {
 		`LaunchNestedContainer:` + strings.Replace(fmt.Sprintf("%v", this.LaunchNestedContainer), "Call_LaunchNestedContainer", "Call_LaunchNestedContainer", 1) + `,`,
 		`WaitNestedContainer:` + strings.Replace(fmt.Sprintf("%v", this.WaitNestedContainer), "Call_WaitNestedContainer", "Call_WaitNestedContainer", 1) + `,`,
 		`KillNestedContainer:` + strings.Replace(fmt.Sprintf("%v", this.KillNestedContainer), "Call_KillNestedContainer", "Call_KillNestedContainer", 1) + `,`,
+		`LaunchNestedContainerSession:` + strings.Replace(fmt.Sprintf("%v", this.LaunchNestedContainerSession), "Call_LaunchNestedContainerSession", "Call_LaunchNestedContainerSession", 1) + `,`,
+		`AttachContainerInput:` + strings.Replace(fmt.Sprintf("%v", this.AttachContainerInput), "Call_AttachContainerInput", "Call_AttachContainerInput", 1) + `,`,
+		`AttachContainerOutput:` + strings.Replace(fmt.Sprintf("%v", this.AttachContainerOutput), "Call_AttachContainerOutput", "Call_AttachContainerOutput", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -5162,6 +6684,40 @@ func (this *Call_KillNestedContainer) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&Call_KillNestedContainer{`,
+		`ContainerId:` + strings.Replace(fmt.Sprintf("%v", this.ContainerId), "ContainerID", "mesos.ContainerID", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Call_LaunchNestedContainerSession) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Call_LaunchNestedContainerSession{`,
+		`ContainerId:` + strings.Replace(fmt.Sprintf("%v", this.ContainerId), "ContainerID", "mesos.ContainerID", 1) + `,`,
+		`Command:` + strings.Replace(fmt.Sprintf("%v", this.Command), "CommandInfo", "mesos.CommandInfo", 1) + `,`,
+		`Container:` + strings.Replace(fmt.Sprintf("%v", this.Container), "ContainerInfo", "mesos.ContainerInfo", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Call_AttachContainerInput) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Call_AttachContainerInput{`,
+		`Type:` + valueToStringAgent(this.Type) + `,`,
+		`ContainerId:` + strings.Replace(fmt.Sprintf("%v", this.ContainerId), "ContainerID", "mesos.ContainerID", 1) + `,`,
+		`ProcessIo:` + strings.Replace(fmt.Sprintf("%v", this.ProcessIo), "ProcessIO", "ProcessIO", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Call_AttachContainerOutput) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Call_AttachContainerOutput{`,
 		`ContainerId:` + strings.Replace(fmt.Sprintf("%v", this.ContainerId), "ContainerID", "mesos.ContainerID", 1) + `,`,
 		`}`,
 	}, "")
@@ -5360,6 +6916,51 @@ func (this *Response_WaitNestedContainer) String() string {
 	}
 	s := strings.Join([]string{`&Response_WaitNestedContainer{`,
 		`ExitStatus:` + valueToStringAgent(this.ExitStatus) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ProcessIO) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ProcessIO{`,
+		`Type:` + valueToStringAgent(this.Type) + `,`,
+		`Data:` + strings.Replace(fmt.Sprintf("%v", this.Data), "ProcessIO_Data", "ProcessIO_Data", 1) + `,`,
+		`Control:` + strings.Replace(fmt.Sprintf("%v", this.Control), "ProcessIO_Control", "ProcessIO_Control", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ProcessIO_Data) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ProcessIO_Data{`,
+		`Type:` + valueToStringAgent(this.Type) + `,`,
+		`Data:` + valueToStringAgent(this.Data) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ProcessIO_Control) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ProcessIO_Control{`,
+		`Type:` + valueToStringAgent(this.Type) + `,`,
+		`TtyInfo:` + strings.Replace(fmt.Sprintf("%v", this.TtyInfo), "TTYInfo", "mesos.TTYInfo", 1) + `,`,
+		`Heartbeat:` + strings.Replace(fmt.Sprintf("%v", this.Heartbeat), "ProcessIO_Control_Heartbeat", "ProcessIO_Control_Heartbeat", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ProcessIO_Control_Heartbeat) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ProcessIO_Control_Heartbeat{`,
+		`Interval:` + strings.Replace(fmt.Sprintf("%v", this.Interval), "DurationInfo", "mesos.DurationInfo", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -5649,6 +7250,105 @@ func (m *Call) Unmarshal(data []byte) error {
 				m.KillNestedContainer = &Call_KillNestedContainer{}
 			}
 			if err := m.KillNestedContainer.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LaunchNestedContainerSession", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.LaunchNestedContainerSession == nil {
+				m.LaunchNestedContainerSession = &Call_LaunchNestedContainerSession{}
+			}
+			if err := m.LaunchNestedContainerSession.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AttachContainerInput", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.AttachContainerInput == nil {
+				m.AttachContainerInput = &Call_AttachContainerInput{}
+			}
+			if err := m.AttachContainerInput.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AttachContainerOutput", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.AttachContainerOutput == nil {
+				m.AttachContainerOutput = &Call_AttachContainerOutput{}
+			}
+			if err := m.AttachContainerOutput.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -6349,6 +8049,384 @@ func (m *Call_KillNestedContainer) Unmarshal(data []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: KillNestedContainer: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContainerId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ContainerId == nil {
+				m.ContainerId = &mesos.ContainerID{}
+			}
+			if err := m.ContainerId.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAgent(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAgent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("container_id")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Call_LaunchNestedContainerSession) Unmarshal(data []byte) error {
+	var hasFields [1]uint64
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAgent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LaunchNestedContainerSession: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LaunchNestedContainerSession: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContainerId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ContainerId == nil {
+				m.ContainerId = &mesos.ContainerID{}
+			}
+			if err := m.ContainerId.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Command", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Command == nil {
+				m.Command = &mesos.CommandInfo{}
+			}
+			if err := m.Command.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Container", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Container == nil {
+				m.Container = &mesos.ContainerInfo{}
+			}
+			if err := m.Container.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAgent(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAgent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("container_id")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Call_AttachContainerInput) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAgent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AttachContainerInput: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AttachContainerInput: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var v Call_AttachContainerInput_Type
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (Call_AttachContainerInput_Type(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Type = &v
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContainerId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ContainerId == nil {
+				m.ContainerId = &mesos.ContainerID{}
+			}
+			if err := m.ContainerId.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProcessIo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ProcessIo == nil {
+				m.ProcessIo = &ProcessIO{}
+			}
+			if err := m.ProcessIo.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAgent(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAgent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Call_AttachContainerOutput) Unmarshal(data []byte) error {
+	var hasFields [1]uint64
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAgent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AttachContainerOutput: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AttachContainerOutput: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -8642,6 +10720,459 @@ func (m *Response_WaitNestedContainer) Unmarshal(data []byte) error {
 				}
 			}
 			m.ExitStatus = &v
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAgent(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAgent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ProcessIO) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAgent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ProcessIO: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ProcessIO: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var v ProcessIO_Type
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (ProcessIO_Type(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Type = &v
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Data == nil {
+				m.Data = &ProcessIO_Data{}
+			}
+			if err := m.Data.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Control", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Control == nil {
+				m.Control = &ProcessIO_Control{}
+			}
+			if err := m.Control.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAgent(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAgent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ProcessIO_Data) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAgent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Data: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Data: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var v ProcessIO_Data_Type
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (ProcessIO_Data_Type(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Type = &v
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Data = append([]byte{}, data[iNdEx:postIndex]...)
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAgent(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAgent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ProcessIO_Control) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAgent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Control: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Control: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var v ProcessIO_Control_Type
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (ProcessIO_Control_Type(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Type = &v
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TtyInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TtyInfo == nil {
+				m.TtyInfo = &mesos.TTYInfo{}
+			}
+			if err := m.TtyInfo.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Heartbeat", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Heartbeat == nil {
+				m.Heartbeat = &ProcessIO_Control_Heartbeat{}
+			}
+			if err := m.Heartbeat.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAgent(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAgent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ProcessIO_Control_Heartbeat) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAgent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Heartbeat: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Heartbeat: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Interval", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAgent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAgent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Interval == nil {
+				m.Interval = &mesos.DurationInfo{}
+			}
+			if err := m.Interval.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAgent(data[iNdEx:])

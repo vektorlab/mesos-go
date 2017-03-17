@@ -19,10 +19,10 @@ import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import mesos "github.com/mesos/mesos-go"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 import mesos_maintenance "github.com/mesos/mesos-go/maintenance"
 import mesos_quota "github.com/mesos/mesos-go/quota"
+
+// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 
 import strconv "strconv"
 
@@ -1035,6 +1035,8 @@ func (m *Response_GetState) GetGetAgents() *Response_GetAgents {
 type Response_GetAgents struct {
 	// Registered agents.
 	Agents []*Response_GetAgents_Agent `protobuf:"bytes,1,rep,name=agents" json:"agents,omitempty"`
+	// Agents which are recovered from registry but not reregistered yet.
+	RecoveredAgents []*mesos.AgentInfo `protobuf:"bytes,2,rep,name=recovered_agents" json:"recovered_agents,omitempty"`
 }
 
 func (m *Response_GetAgents) Reset()      { *m = Response_GetAgents{} }
@@ -1043,6 +1045,13 @@ func (*Response_GetAgents) ProtoMessage() {}
 func (m *Response_GetAgents) GetAgents() []*Response_GetAgents_Agent {
 	if m != nil {
 		return m.Agents
+	}
+	return nil
+}
+
+func (m *Response_GetAgents) GetRecoveredAgents() []*mesos.AgentInfo {
+	if m != nil {
+		return m.RecoveredAgents
 	}
 	return nil
 }
@@ -1136,8 +1145,14 @@ type Response_GetFrameworks struct {
 	Frameworks []*Response_GetFrameworks_Framework `protobuf:"bytes,1,rep,name=frameworks" json:"frameworks,omitempty"`
 	// Frameworks that have been teared down.
 	CompletedFrameworks []*Response_GetFrameworks_Framework `protobuf:"bytes,2,rep,name=completed_frameworks" json:"completed_frameworks,omitempty"`
-	// Frameworks that have previously subscribed but haven't yet subscribed
-	// after a master failover.
+	// This field previously contained frameworks that previously
+	// subscribed but haven't yet re-subscribed after a master failover.
+	// As of Mesos 1.2, this field will always be empty; recovered
+	// frameworks are now reported in the `frameworks` list with the
+	// `recovered` field set to true.
+	//
+	// TODO(neilc): Remove this field after a deprecation cycle starting
+	// in Mesos 1.2.
 	RecoveredFrameworks []*mesos.FrameworkInfo `protobuf:"bytes,3,rep,name=recovered_frameworks" json:"recovered_frameworks,omitempty"`
 }
 
@@ -1166,9 +1181,15 @@ func (m *Response_GetFrameworks) GetRecoveredFrameworks() []*mesos.FrameworkInfo
 }
 
 type Response_GetFrameworks_Framework struct {
-	FrameworkInfo      *mesos.FrameworkInfo  `protobuf:"bytes,1,req,name=framework_info" json:"framework_info,omitempty"`
-	Active             *bool                 `protobuf:"varint,2,req,name=active" json:"active,omitempty"`
-	Connected          *bool                 `protobuf:"varint,3,req,name=connected" json:"connected,omitempty"`
+	FrameworkInfo *mesos.FrameworkInfo `protobuf:"bytes,1,req,name=framework_info" json:"framework_info,omitempty"`
+	Active        *bool                `protobuf:"varint,2,req,name=active" json:"active,omitempty"`
+	Connected     *bool                `protobuf:"varint,3,req,name=connected" json:"connected,omitempty"`
+	// If true, this framework was previously subscribed but hasn't
+	// yet re-subscribed after a master failover. Recovered frameworks
+	// are only reported if one or more agents running a task or
+	// executor for the framework have re-registered after master
+	// failover.
+	Recovered          *bool                 `protobuf:"varint,11,req,name=recovered" json:"recovered,omitempty"`
 	RegisteredTime     *mesos.TimeInfo       `protobuf:"bytes,4,opt,name=registered_time" json:"registered_time,omitempty"`
 	ReregisteredTime   *mesos.TimeInfo       `protobuf:"bytes,5,opt,name=reregistered_time" json:"reregistered_time,omitempty"`
 	UnregisteredTime   *mesos.TimeInfo       `protobuf:"bytes,6,opt,name=unregistered_time" json:"unregistered_time,omitempty"`
@@ -1198,6 +1219,13 @@ func (m *Response_GetFrameworks_Framework) GetActive() bool {
 func (m *Response_GetFrameworks_Framework) GetConnected() bool {
 	if m != nil && m.Connected != nil {
 		return *m.Connected
+	}
+	return false
+}
+
+func (m *Response_GetFrameworks_Framework) GetRecovered() bool {
+	if m != nil && m.Recovered != nil {
+		return *m.Recovered
 	}
 	return false
 }
@@ -1255,7 +1283,11 @@ func (m *Response_GetFrameworks_Framework) GetOfferedResources() []*mesos.Resour
 // current time. Note that there might be executors unknown to the master
 // running on partitioned or unsubscribed agents.
 type Response_GetExecutors struct {
-	Executors       []*Response_GetExecutors_Executor `protobuf:"bytes,1,rep,name=executors" json:"executors,omitempty"`
+	Executors []*Response_GetExecutors_Executor `protobuf:"bytes,1,rep,name=executors" json:"executors,omitempty"`
+	// As of Mesos 1.2, this field will always be empty.
+	//
+	// TODO(neilc): Remove this field after a deprecation cycle starting
+	// in Mesos 1.2.
 	OrphanExecutors []*Response_GetExecutors_Executor `protobuf:"bytes,2,rep,name=orphan_executors" json:"orphan_executors,omitempty"`
 }
 
@@ -1302,17 +1334,28 @@ func (m *Response_GetExecutors_Executor) GetAgentId() *mesos.AgentID {
 // time. Note that there might be tasks unknown to the master running on
 // partitioned or unsubscribed agents.
 type Response_GetTasks struct {
-	// Tasks that are an enqueued on the master waiting (e.g., authorizing)
+	// Tasks that are enqueued on the master waiting (e.g., authorizing)
 	// to be launched.
 	PendingTasks []*mesos.Task `protobuf:"bytes,1,rep,name=pending_tasks" json:"pending_tasks,omitempty"`
-	// Tasks that have been forwarded to the agent for launch. This includes
-	// tasks that are running and reached terminal state.
+	// Tasks that have been forwarded to the agent for launch. This
+	// includes tasks that are staging or running; it also includes
+	// tasks that have reached a terminal state but the terminal status
+	// update has not yet been acknowledged by the scheduler.
 	Tasks []*mesos.Task `protobuf:"bytes,2,rep,name=tasks" json:"tasks,omitempty"`
+	// Tasks that were running on agents that have become partitioned
+	// from the master. If/when the agent is no longer partitioned,
+	// tasks running on that agent will no longer be unreachable (they
+	// will either be running or completed). Note that the master only
+	// stores a limited number of unreachable tasks; information about
+	// unreachable tasks is also not preserved across master failover.
+	UnreachableTasks []*mesos.Task `protobuf:"bytes,5,rep,name=unreachable_tasks" json:"unreachable_tasks,omitempty"`
 	// Tasks that have reached terminal state and have all their updates
 	// acknowledged by the scheduler.
 	CompletedTasks []*mesos.Task `protobuf:"bytes,3,rep,name=completed_tasks" json:"completed_tasks,omitempty"`
-	// Tasks belonging to frameworks that have not yet re-subscribed with
-	// master (e.g., immediately after master failover).
+	// As of Mesos 1.2, this field will always be empty.
+	//
+	// TODO(neilc): Remove this field after a deprecation cycle starting
+	// in Mesos 1.2.
 	OrphanTasks []*mesos.Task `protobuf:"bytes,4,rep,name=orphan_tasks" json:"orphan_tasks,omitempty"`
 }
 
@@ -1329,6 +1372,13 @@ func (m *Response_GetTasks) GetPendingTasks() []*mesos.Task {
 func (m *Response_GetTasks) GetTasks() []*mesos.Task {
 	if m != nil {
 		return m.Tasks
+	}
+	return nil
+}
+
+func (m *Response_GetTasks) GetUnreachableTasks() []*mesos.Task {
+	if m != nil {
+		return m.UnreachableTasks
 	}
 	return nil
 }
@@ -3347,6 +3397,14 @@ func (this *Response_GetAgents) VerboseEqual(that interface{}) error {
 			return fmt.Errorf("Agents this[%v](%v) Not Equal that[%v](%v)", i, this.Agents[i], i, that1.Agents[i])
 		}
 	}
+	if len(this.RecoveredAgents) != len(that1.RecoveredAgents) {
+		return fmt.Errorf("RecoveredAgents this(%v) Not Equal that(%v)", len(this.RecoveredAgents), len(that1.RecoveredAgents))
+	}
+	for i := range this.RecoveredAgents {
+		if !this.RecoveredAgents[i].Equal(that1.RecoveredAgents[i]) {
+			return fmt.Errorf("RecoveredAgents this[%v](%v) Not Equal that[%v](%v)", i, this.RecoveredAgents[i], i, that1.RecoveredAgents[i])
+		}
+	}
 	return nil
 }
 func (this *Response_GetAgents) Equal(that interface{}) bool {
@@ -3374,6 +3432,14 @@ func (this *Response_GetAgents) Equal(that interface{}) bool {
 	}
 	for i := range this.Agents {
 		if !this.Agents[i].Equal(that1.Agents[i]) {
+			return false
+		}
+	}
+	if len(this.RecoveredAgents) != len(that1.RecoveredAgents) {
+		return false
+	}
+	for i := range this.RecoveredAgents {
+		if !this.RecoveredAgents[i].Equal(that1.RecoveredAgents[i]) {
 			return false
 		}
 	}
@@ -3676,6 +3742,15 @@ func (this *Response_GetFrameworks_Framework) VerboseEqual(that interface{}) err
 	} else if that1.Connected != nil {
 		return fmt.Errorf("Connected this(%v) Not Equal that(%v)", this.Connected, that1.Connected)
 	}
+	if this.Recovered != nil && that1.Recovered != nil {
+		if *this.Recovered != *that1.Recovered {
+			return fmt.Errorf("Recovered this(%v) Not Equal that(%v)", *this.Recovered, *that1.Recovered)
+		}
+	} else if this.Recovered != nil {
+		return fmt.Errorf("this.Recovered == nil && that.Recovered != nil")
+	} else if that1.Recovered != nil {
+		return fmt.Errorf("Recovered this(%v) Not Equal that(%v)", this.Recovered, that1.Recovered)
+	}
 	if !this.RegisteredTime.Equal(that1.RegisteredTime) {
 		return fmt.Errorf("RegisteredTime this(%v) Not Equal that(%v)", this.RegisteredTime, that1.RegisteredTime)
 	}
@@ -3758,6 +3833,15 @@ func (this *Response_GetFrameworks_Framework) Equal(that interface{}) bool {
 	} else if this.Connected != nil {
 		return false
 	} else if that1.Connected != nil {
+		return false
+	}
+	if this.Recovered != nil && that1.Recovered != nil {
+		if *this.Recovered != *that1.Recovered {
+			return false
+		}
+	} else if this.Recovered != nil {
+		return false
+	} else if that1.Recovered != nil {
 		return false
 	}
 	if !this.RegisteredTime.Equal(that1.RegisteredTime) {
@@ -3971,6 +4055,14 @@ func (this *Response_GetTasks) VerboseEqual(that interface{}) error {
 			return fmt.Errorf("Tasks this[%v](%v) Not Equal that[%v](%v)", i, this.Tasks[i], i, that1.Tasks[i])
 		}
 	}
+	if len(this.UnreachableTasks) != len(that1.UnreachableTasks) {
+		return fmt.Errorf("UnreachableTasks this(%v) Not Equal that(%v)", len(this.UnreachableTasks), len(that1.UnreachableTasks))
+	}
+	for i := range this.UnreachableTasks {
+		if !this.UnreachableTasks[i].Equal(that1.UnreachableTasks[i]) {
+			return fmt.Errorf("UnreachableTasks this[%v](%v) Not Equal that[%v](%v)", i, this.UnreachableTasks[i], i, that1.UnreachableTasks[i])
+		}
+	}
 	if len(this.CompletedTasks) != len(that1.CompletedTasks) {
 		return fmt.Errorf("CompletedTasks this(%v) Not Equal that(%v)", len(this.CompletedTasks), len(that1.CompletedTasks))
 	}
@@ -4022,6 +4114,14 @@ func (this *Response_GetTasks) Equal(that interface{}) bool {
 	}
 	for i := range this.Tasks {
 		if !this.Tasks[i].Equal(that1.Tasks[i]) {
+			return false
+		}
+	}
+	if len(this.UnreachableTasks) != len(that1.UnreachableTasks) {
+		return false
+	}
+	for i := range this.UnreachableTasks {
+		if !this.UnreachableTasks[i].Equal(that1.UnreachableTasks[i]) {
 			return false
 		}
 	}
@@ -5869,6 +5969,18 @@ func (m *Response_GetAgents) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
+	if len(m.RecoveredAgents) > 0 {
+		for _, msg := range m.RecoveredAgents {
+			data[i] = 0x12
+			i++
+			i = encodeVarintMaster(data, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(data[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -6167,6 +6279,18 @@ func (m *Response_GetFrameworks_Framework) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
+	if m.Recovered == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("recovered")
+	} else {
+		data[i] = 0x58
+		i++
+		if *m.Recovered {
+			data[i] = 1
+		} else {
+			data[i] = 0
+		}
+		i++
+	}
 	return i, nil
 }
 
@@ -6308,6 +6432,18 @@ func (m *Response_GetTasks) MarshalTo(data []byte) (int, error) {
 	if len(m.OrphanTasks) > 0 {
 		for _, msg := range m.OrphanTasks {
 			data[i] = 0x22
+			i++
+			i = encodeVarintMaster(data, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(data[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.UnreachableTasks) > 0 {
+		for _, msg := range m.UnreachableTasks {
+			data[i] = 0x2a
 			i++
 			i = encodeVarintMaster(data, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(data[i:])
@@ -7164,6 +7300,13 @@ func NewPopulatedResponse_GetAgents(r randyMaster, easy bool) *Response_GetAgent
 			this.Agents[i] = NewPopulatedResponse_GetAgents_Agent(r, easy)
 		}
 	}
+	if r.Intn(10) != 0 {
+		v24 := r.Intn(10)
+		this.RecoveredAgents = make([]*mesos.AgentInfo, v24)
+		for i := 0; i < v24; i++ {
+			this.RecoveredAgents[i] = mesos.NewPopulatedAgentInfo(r, easy)
+		}
+	}
 	if !easy && r.Intn(10) != 0 {
 	}
 	return this
@@ -7172,13 +7315,13 @@ func NewPopulatedResponse_GetAgents(r randyMaster, easy bool) *Response_GetAgent
 func NewPopulatedResponse_GetAgents_Agent(r randyMaster, easy bool) *Response_GetAgents_Agent {
 	this := &Response_GetAgents_Agent{}
 	this.AgentInfo = mesos.NewPopulatedAgentInfo(r, easy)
-	v24 := bool(bool(r.Intn(2) == 0))
-	this.Active = &v24
-	v25 := randStringMaster(r)
-	this.Version = &v25
+	v25 := bool(bool(r.Intn(2) == 0))
+	this.Active = &v25
+	v26 := randStringMaster(r)
+	this.Version = &v26
 	if r.Intn(10) != 0 {
-		v26 := randStringMaster(r)
-		this.Pid = &v26
+		v27 := randStringMaster(r)
+		this.Pid = &v27
 	}
 	if r.Intn(10) != 0 {
 		this.RegisteredTime = mesos.NewPopulatedTimeInfo(r, easy)
@@ -7187,23 +7330,23 @@ func NewPopulatedResponse_GetAgents_Agent(r randyMaster, easy bool) *Response_Ge
 		this.ReregisteredTime = mesos.NewPopulatedTimeInfo(r, easy)
 	}
 	if r.Intn(10) != 0 {
-		v27 := r.Intn(10)
-		this.TotalResources = make([]*mesos.Resource, v27)
-		for i := 0; i < v27; i++ {
+		v28 := r.Intn(10)
+		this.TotalResources = make([]*mesos.Resource, v28)
+		for i := 0; i < v28; i++ {
 			this.TotalResources[i] = mesos.NewPopulatedResource(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v28 := r.Intn(10)
-		this.AllocatedResources = make([]*mesos.Resource, v28)
-		for i := 0; i < v28; i++ {
+		v29 := r.Intn(10)
+		this.AllocatedResources = make([]*mesos.Resource, v29)
+		for i := 0; i < v29; i++ {
 			this.AllocatedResources[i] = mesos.NewPopulatedResource(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v29 := r.Intn(10)
-		this.OfferedResources = make([]*mesos.Resource, v29)
-		for i := 0; i < v29; i++ {
+		v30 := r.Intn(10)
+		this.OfferedResources = make([]*mesos.Resource, v30)
+		for i := 0; i < v30; i++ {
 			this.OfferedResources[i] = mesos.NewPopulatedResource(r, easy)
 		}
 	}
@@ -7215,23 +7358,23 @@ func NewPopulatedResponse_GetAgents_Agent(r randyMaster, easy bool) *Response_Ge
 func NewPopulatedResponse_GetFrameworks(r randyMaster, easy bool) *Response_GetFrameworks {
 	this := &Response_GetFrameworks{}
 	if r.Intn(10) != 0 {
-		v30 := r.Intn(10)
-		this.Frameworks = make([]*Response_GetFrameworks_Framework, v30)
-		for i := 0; i < v30; i++ {
+		v31 := r.Intn(10)
+		this.Frameworks = make([]*Response_GetFrameworks_Framework, v31)
+		for i := 0; i < v31; i++ {
 			this.Frameworks[i] = NewPopulatedResponse_GetFrameworks_Framework(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v31 := r.Intn(10)
-		this.CompletedFrameworks = make([]*Response_GetFrameworks_Framework, v31)
-		for i := 0; i < v31; i++ {
+		v32 := r.Intn(10)
+		this.CompletedFrameworks = make([]*Response_GetFrameworks_Framework, v32)
+		for i := 0; i < v32; i++ {
 			this.CompletedFrameworks[i] = NewPopulatedResponse_GetFrameworks_Framework(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v32 := r.Intn(10)
-		this.RecoveredFrameworks = make([]*mesos.FrameworkInfo, v32)
-		for i := 0; i < v32; i++ {
+		v33 := r.Intn(10)
+		this.RecoveredFrameworks = make([]*mesos.FrameworkInfo, v33)
+		for i := 0; i < v33; i++ {
 			this.RecoveredFrameworks[i] = mesos.NewPopulatedFrameworkInfo(r, easy)
 		}
 	}
@@ -7243,10 +7386,10 @@ func NewPopulatedResponse_GetFrameworks(r randyMaster, easy bool) *Response_GetF
 func NewPopulatedResponse_GetFrameworks_Framework(r randyMaster, easy bool) *Response_GetFrameworks_Framework {
 	this := &Response_GetFrameworks_Framework{}
 	this.FrameworkInfo = mesos.NewPopulatedFrameworkInfo(r, easy)
-	v33 := bool(bool(r.Intn(2) == 0))
-	this.Active = &v33
 	v34 := bool(bool(r.Intn(2) == 0))
-	this.Connected = &v34
+	this.Active = &v34
+	v35 := bool(bool(r.Intn(2) == 0))
+	this.Connected = &v35
 	if r.Intn(10) != 0 {
 		this.RegisteredTime = mesos.NewPopulatedTimeInfo(r, easy)
 	}
@@ -7257,33 +7400,35 @@ func NewPopulatedResponse_GetFrameworks_Framework(r randyMaster, easy bool) *Res
 		this.UnregisteredTime = mesos.NewPopulatedTimeInfo(r, easy)
 	}
 	if r.Intn(10) != 0 {
-		v35 := r.Intn(10)
-		this.Offers = make([]*mesos.Offer, v35)
-		for i := 0; i < v35; i++ {
+		v36 := r.Intn(10)
+		this.Offers = make([]*mesos.Offer, v36)
+		for i := 0; i < v36; i++ {
 			this.Offers[i] = mesos.NewPopulatedOffer(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v36 := r.Intn(10)
-		this.InverseOffers = make([]*mesos.InverseOffer, v36)
-		for i := 0; i < v36; i++ {
+		v37 := r.Intn(10)
+		this.InverseOffers = make([]*mesos.InverseOffer, v37)
+		for i := 0; i < v37; i++ {
 			this.InverseOffers[i] = mesos.NewPopulatedInverseOffer(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v37 := r.Intn(10)
-		this.AllocatedResources = make([]*mesos.Resource, v37)
-		for i := 0; i < v37; i++ {
+		v38 := r.Intn(10)
+		this.AllocatedResources = make([]*mesos.Resource, v38)
+		for i := 0; i < v38; i++ {
 			this.AllocatedResources[i] = mesos.NewPopulatedResource(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v38 := r.Intn(10)
-		this.OfferedResources = make([]*mesos.Resource, v38)
-		for i := 0; i < v38; i++ {
+		v39 := r.Intn(10)
+		this.OfferedResources = make([]*mesos.Resource, v39)
+		for i := 0; i < v39; i++ {
 			this.OfferedResources[i] = mesos.NewPopulatedResource(r, easy)
 		}
 	}
+	v40 := bool(bool(r.Intn(2) == 0))
+	this.Recovered = &v40
 	if !easy && r.Intn(10) != 0 {
 	}
 	return this
@@ -7292,16 +7437,16 @@ func NewPopulatedResponse_GetFrameworks_Framework(r randyMaster, easy bool) *Res
 func NewPopulatedResponse_GetExecutors(r randyMaster, easy bool) *Response_GetExecutors {
 	this := &Response_GetExecutors{}
 	if r.Intn(10) != 0 {
-		v39 := r.Intn(10)
-		this.Executors = make([]*Response_GetExecutors_Executor, v39)
-		for i := 0; i < v39; i++ {
+		v41 := r.Intn(10)
+		this.Executors = make([]*Response_GetExecutors_Executor, v41)
+		for i := 0; i < v41; i++ {
 			this.Executors[i] = NewPopulatedResponse_GetExecutors_Executor(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v40 := r.Intn(10)
-		this.OrphanExecutors = make([]*Response_GetExecutors_Executor, v40)
-		for i := 0; i < v40; i++ {
+		v42 := r.Intn(10)
+		this.OrphanExecutors = make([]*Response_GetExecutors_Executor, v42)
+		for i := 0; i < v42; i++ {
 			this.OrphanExecutors[i] = NewPopulatedResponse_GetExecutors_Executor(r, easy)
 		}
 	}
@@ -7322,31 +7467,38 @@ func NewPopulatedResponse_GetExecutors_Executor(r randyMaster, easy bool) *Respo
 func NewPopulatedResponse_GetTasks(r randyMaster, easy bool) *Response_GetTasks {
 	this := &Response_GetTasks{}
 	if r.Intn(10) != 0 {
-		v41 := r.Intn(10)
-		this.PendingTasks = make([]*mesos.Task, v41)
-		for i := 0; i < v41; i++ {
+		v43 := r.Intn(10)
+		this.PendingTasks = make([]*mesos.Task, v43)
+		for i := 0; i < v43; i++ {
 			this.PendingTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v42 := r.Intn(10)
-		this.Tasks = make([]*mesos.Task, v42)
-		for i := 0; i < v42; i++ {
+		v44 := r.Intn(10)
+		this.Tasks = make([]*mesos.Task, v44)
+		for i := 0; i < v44; i++ {
 			this.Tasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v43 := r.Intn(10)
-		this.CompletedTasks = make([]*mesos.Task, v43)
-		for i := 0; i < v43; i++ {
+		v45 := r.Intn(10)
+		this.CompletedTasks = make([]*mesos.Task, v45)
+		for i := 0; i < v45; i++ {
 			this.CompletedTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
 	if r.Intn(10) != 0 {
-		v44 := r.Intn(10)
-		this.OrphanTasks = make([]*mesos.Task, v44)
-		for i := 0; i < v44; i++ {
+		v46 := r.Intn(10)
+		this.OrphanTasks = make([]*mesos.Task, v46)
+		for i := 0; i < v46; i++ {
 			this.OrphanTasks[i] = mesos.NewPopulatedTask(r, easy)
+		}
+	}
+	if r.Intn(10) != 0 {
+		v47 := r.Intn(10)
+		this.UnreachableTasks = make([]*mesos.Task, v47)
+		for i := 0; i < v47; i++ {
+			this.UnreachableTasks[i] = mesos.NewPopulatedTask(r, easy)
 		}
 	}
 	if !easy && r.Intn(10) != 0 {
@@ -7357,9 +7509,9 @@ func NewPopulatedResponse_GetTasks(r randyMaster, easy bool) *Response_GetTasks 
 func NewPopulatedResponse_GetRoles(r randyMaster, easy bool) *Response_GetRoles {
 	this := &Response_GetRoles{}
 	if r.Intn(10) != 0 {
-		v45 := r.Intn(10)
-		this.Roles = make([]*mesos.Role, v45)
-		for i := 0; i < v45; i++ {
+		v48 := r.Intn(10)
+		this.Roles = make([]*mesos.Role, v48)
+		for i := 0; i < v48; i++ {
 			this.Roles[i] = mesos.NewPopulatedRole(r, easy)
 		}
 	}
@@ -7371,9 +7523,9 @@ func NewPopulatedResponse_GetRoles(r randyMaster, easy bool) *Response_GetRoles 
 func NewPopulatedResponse_GetWeights(r randyMaster, easy bool) *Response_GetWeights {
 	this := &Response_GetWeights{}
 	if r.Intn(10) != 0 {
-		v46 := r.Intn(10)
-		this.WeightInfos = make([]*mesos.WeightInfo, v46)
-		for i := 0; i < v46; i++ {
+		v49 := r.Intn(10)
+		this.WeightInfos = make([]*mesos.WeightInfo, v49)
+		for i := 0; i < v49; i++ {
 			this.WeightInfos[i] = mesos.NewPopulatedWeightInfo(r, easy)
 		}
 	}
@@ -7419,8 +7571,8 @@ func NewPopulatedResponse_GetQuota(r randyMaster, easy bool) *Response_GetQuota 
 func NewPopulatedEvent(r randyMaster, easy bool) *Event {
 	this := &Event{}
 	if r.Intn(10) != 0 {
-		v47 := Event_Type([]int32{0, 1, 2, 3, 4, 5}[r.Intn(6)])
-		this.Type = &v47
+		v50 := Event_Type([]int32{0, 1, 2, 3, 4, 5}[r.Intn(6)])
+		this.Type = &v50
 	}
 	if r.Intn(10) != 0 {
 		this.Subscribed = NewPopulatedEvent_Subscribed(r, easy)
@@ -7464,8 +7616,8 @@ func NewPopulatedEvent_TaskUpdated(r randyMaster, easy bool) *Event_TaskUpdated 
 	this := &Event_TaskUpdated{}
 	this.FrameworkId = mesos.NewPopulatedFrameworkID(r, easy)
 	this.Status = mesos.NewPopulatedTaskStatus(r, easy)
-	v48 := mesos.TaskState([]int32{6, 0, 1, 8, 2, 3, 4, 7, 5, 9, 10, 11, 12, 13}[r.Intn(14)])
-	this.State = &v48
+	v51 := mesos.TaskState([]int32{6, 0, 1, 8, 2, 3, 4, 7, 5, 9, 10, 11, 12, 13}[r.Intn(14)])
+	this.State = &v51
 	if !easy && r.Intn(10) != 0 {
 	}
 	return this
@@ -7506,9 +7658,9 @@ func randUTF8RuneMaster(r randyMaster) rune {
 	return rune(ru + 61)
 }
 func randStringMaster(r randyMaster) string {
-	v49 := r.Intn(100)
-	tmps := make([]rune, v49)
-	for i := 0; i < v49; i++ {
+	v52 := r.Intn(100)
+	tmps := make([]rune, v52)
+	for i := 0; i < v52; i++ {
 		tmps[i] = randUTF8RuneMaster(r)
 	}
 	return string(tmps)
@@ -7530,11 +7682,11 @@ func randFieldMaster(data []byte, r randyMaster, fieldNumber int, wire int) []by
 	switch wire {
 	case 0:
 		data = encodeVarintPopulateMaster(data, uint64(key))
-		v50 := r.Int63()
+		v53 := r.Int63()
 		if r.Intn(2) == 0 {
-			v50 *= -1
+			v53 *= -1
 		}
-		data = encodeVarintPopulateMaster(data, uint64(v50))
+		data = encodeVarintPopulateMaster(data, uint64(v53))
 	case 1:
 		data = encodeVarintPopulateMaster(data, uint64(key))
 		data = append(data, byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)))
@@ -7992,6 +8144,12 @@ func (m *Response_GetAgents) Size() (n int) {
 			n += 1 + l + sovMaster(uint64(l))
 		}
 	}
+	if len(m.RecoveredAgents) > 0 {
+		for _, e := range m.RecoveredAgents {
+			l = e.Size()
+			n += 1 + l + sovMaster(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -8115,6 +8273,9 @@ func (m *Response_GetFrameworks_Framework) Size() (n int) {
 			n += 1 + l + sovMaster(uint64(l))
 		}
 	}
+	if m.Recovered != nil {
+		n += 2
+	}
 	return n
 }
 
@@ -8173,6 +8334,12 @@ func (m *Response_GetTasks) Size() (n int) {
 	}
 	if len(m.OrphanTasks) > 0 {
 		for _, e := range m.OrphanTasks {
+			l = e.Size()
+			n += 1 + l + sovMaster(uint64(l))
+		}
+	}
+	if len(m.UnreachableTasks) > 0 {
+		for _, e := range m.UnreachableTasks {
 			l = e.Size()
 			n += 1 + l + sovMaster(uint64(l))
 		}
@@ -8632,6 +8799,7 @@ func (this *Response_GetAgents) String() string {
 	}
 	s := strings.Join([]string{`&Response_GetAgents{`,
 		`Agents:` + strings.Replace(fmt.Sprintf("%v", this.Agents), "Response_GetAgents_Agent", "Response_GetAgents_Agent", 1) + `,`,
+		`RecoveredAgents:` + strings.Replace(fmt.Sprintf("%v", this.RecoveredAgents), "AgentInfo", "mesos.AgentInfo", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -8681,6 +8849,7 @@ func (this *Response_GetFrameworks_Framework) String() string {
 		`InverseOffers:` + strings.Replace(fmt.Sprintf("%v", this.InverseOffers), "InverseOffer", "mesos.InverseOffer", 1) + `,`,
 		`AllocatedResources:` + strings.Replace(fmt.Sprintf("%v", this.AllocatedResources), "Resource", "mesos.Resource", 1) + `,`,
 		`OfferedResources:` + strings.Replace(fmt.Sprintf("%v", this.OfferedResources), "Resource", "mesos.Resource", 1) + `,`,
+		`Recovered:` + valueToStringMaster(this.Recovered) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -8716,6 +8885,7 @@ func (this *Response_GetTasks) String() string {
 		`Tasks:` + strings.Replace(fmt.Sprintf("%v", this.Tasks), "Task", "mesos.Task", 1) + `,`,
 		`CompletedTasks:` + strings.Replace(fmt.Sprintf("%v", this.CompletedTasks), "Task", "mesos.Task", 1) + `,`,
 		`OrphanTasks:` + strings.Replace(fmt.Sprintf("%v", this.OrphanTasks), "Task", "mesos.Task", 1) + `,`,
+		`UnreachableTasks:` + strings.Replace(fmt.Sprintf("%v", this.UnreachableTasks), "Task", "mesos.Task", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -12271,6 +12441,37 @@ func (m *Response_GetAgents) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecoveredAgents", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMaster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMaster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecoveredAgents = append(m.RecoveredAgents, &mesos.AgentInfo{})
+			if err := m.RecoveredAgents[len(m.RecoveredAgents)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMaster(data[iNdEx:])
@@ -13102,6 +13303,28 @@ func (m *Response_GetFrameworks_Framework) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Recovered", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMaster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			b := bool(v != 0)
+			m.Recovered = &b
+			hasFields[0] |= uint64(0x00000008)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMaster(data[iNdEx:])
@@ -13125,6 +13348,9 @@ func (m *Response_GetFrameworks_Framework) Unmarshal(data []byte) error {
 	}
 	if hasFields[0]&uint64(0x00000004) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("connected")
+	}
+	if hasFields[0]&uint64(0x00000008) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("recovered")
 	}
 
 	if iNdEx > l {
@@ -13519,6 +13745,37 @@ func (m *Response_GetTasks) Unmarshal(data []byte) error {
 			}
 			m.OrphanTasks = append(m.OrphanTasks, &mesos.Task{})
 			if err := m.OrphanTasks[len(m.OrphanTasks)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UnreachableTasks", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMaster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMaster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UnreachableTasks = append(m.UnreachableTasks, &mesos.Task{})
+			if err := m.UnreachableTasks[len(m.UnreachableTasks)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

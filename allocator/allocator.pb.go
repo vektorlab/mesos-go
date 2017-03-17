@@ -16,9 +16,9 @@ package allocator
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import mesos "github.com/mesos/mesos-go"
 
 // discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
+import mesos "github.com/mesos/mesos-go"
 
 import strconv "strconv"
 

@@ -7802,6 +7802,35 @@ func (mj *Response_GetAgents) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		}
 		buf.WriteByte(',')
 	}
+	if len(mj.RecoveredAgents) != 0 {
+		buf.WriteString(`"recovered_agents":`)
+		if mj.RecoveredAgents != nil {
+			buf.WriteString(`[`)
+			for i, v := range mj.RecoveredAgents {
+				if i != 0 {
+					buf.WriteString(`,`)
+				}
+
+				{
+
+					if v == nil {
+						buf.WriteString("null")
+						return nil
+					}
+
+					err = v.MarshalJSONBuf(buf)
+					if err != nil {
+						return err
+					}
+
+				}
+			}
+			buf.WriteString(`]`)
+		} else {
+			buf.WriteString(`null`)
+		}
+		buf.WriteByte(',')
+	}
 	buf.Rewind(1)
 	buf.WriteByte('}')
 	return nil
@@ -7812,9 +7841,13 @@ const (
 	ffj_t_Response_GetAgentsno_such_key
 
 	ffj_t_Response_GetAgents_Agents
+
+	ffj_t_Response_GetAgents_RecoveredAgents
 )
 
 var ffj_key_Response_GetAgents_Agents = []byte("agents")
+
+var ffj_key_Response_GetAgents_RecoveredAgents = []byte("recovered_agents")
 
 func (uj *Response_GetAgents) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
@@ -7883,6 +7916,20 @@ mainparse:
 						goto mainparse
 					}
 
+				case 'r':
+
+					if bytes.Equal(ffj_key_Response_GetAgents_RecoveredAgents, kn) {
+						currentKey = ffj_t_Response_GetAgents_RecoveredAgents
+						state = fflib.FFParse_want_colon
+						goto mainparse
+					}
+
+				}
+
+				if fflib.EqualFoldRight(ffj_key_Response_GetAgents_RecoveredAgents, kn) {
+					currentKey = ffj_t_Response_GetAgents_RecoveredAgents
+					state = fflib.FFParse_want_colon
+					goto mainparse
 				}
 
 				if fflib.EqualFoldRight(ffj_key_Response_GetAgents_Agents, kn) {
@@ -7910,6 +7957,9 @@ mainparse:
 
 				case ffj_t_Response_GetAgents_Agents:
 					goto handle_Agents
+
+				case ffj_t_Response_GetAgents_RecoveredAgents:
+					goto handle_RecoveredAgents
 
 				case ffj_t_Response_GetAgentsno_such_key:
 					err = fs.SkipField(tok)
@@ -7991,6 +8041,81 @@ handle_Agents:
 				}
 
 				uj.Agents = append(uj.Agents, tmp_uj__Agents)
+
+				wantVal = false
+			}
+		}
+	}
+
+	state = fflib.FFParse_after_value
+	goto mainparse
+
+handle_RecoveredAgents:
+
+	/* handler: uj.RecoveredAgents type=[]*mesos.AgentInfo kind=slice quoted=false*/
+
+	{
+
+		{
+			if tok != fflib.FFTok_left_brace && tok != fflib.FFTok_null {
+				return fs.WrapErr(fmt.Errorf("cannot unmarshal %s into Go value for ", tok))
+			}
+		}
+
+		if tok == fflib.FFTok_null {
+			uj.RecoveredAgents = nil
+		} else {
+
+			uj.RecoveredAgents = []*mesos.AgentInfo{}
+
+			wantVal := true
+
+			for {
+
+				var tmp_uj__RecoveredAgents *mesos.AgentInfo
+
+				tok = fs.Scan()
+				if tok == fflib.FFTok_error {
+					goto tokerror
+				}
+				if tok == fflib.FFTok_right_brace {
+					break
+				}
+
+				if tok == fflib.FFTok_comma {
+					if wantVal == true {
+						// TODO(pquerna): this isn't an ideal error message, this handles
+						// things like [,,,] as an array value.
+						return fs.WrapErr(fmt.Errorf("wanted value token, but got token: %v", tok))
+					}
+					continue
+				} else {
+					wantVal = true
+				}
+
+				/* handler: tmp_uj__RecoveredAgents type=*mesos.AgentInfo kind=ptr quoted=false*/
+
+				{
+					if tok == fflib.FFTok_null {
+
+						tmp_uj__RecoveredAgents = nil
+
+						state = fflib.FFParse_after_value
+						goto mainparse
+					}
+
+					if tmp_uj__RecoveredAgents == nil {
+						tmp_uj__RecoveredAgents = new(mesos.AgentInfo)
+					}
+
+					err = tmp_uj__RecoveredAgents.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
+					if err != nil {
+						return err
+					}
+					state = fflib.FFParse_after_value
+				}
+
+				uj.RecoveredAgents = append(uj.RecoveredAgents, tmp_uj__RecoveredAgents)
 
 				wantVal = false
 			}
@@ -10398,6 +10523,16 @@ func (mj *Response_GetFrameworks_Framework) MarshalJSONBuf(buf fflib.EncodingBuf
 			buf.WriteByte(',')
 		}
 	}
+	if mj.Recovered != nil {
+		if true {
+			if *mj.Recovered {
+				buf.WriteString(`"recovered":true`)
+			} else {
+				buf.WriteString(`"recovered":false`)
+			}
+			buf.WriteByte(',')
+		}
+	}
 	if mj.RegisteredTime != nil {
 		if true {
 			buf.WriteString(`"registered_time":`)
@@ -10574,6 +10709,8 @@ const (
 
 	ffj_t_Response_GetFrameworks_Framework_Connected
 
+	ffj_t_Response_GetFrameworks_Framework_Recovered
+
 	ffj_t_Response_GetFrameworks_Framework_RegisteredTime
 
 	ffj_t_Response_GetFrameworks_Framework_ReregisteredTime
@@ -10594,6 +10731,8 @@ var ffj_key_Response_GetFrameworks_Framework_FrameworkInfo = []byte("framework_i
 var ffj_key_Response_GetFrameworks_Framework_Active = []byte("active")
 
 var ffj_key_Response_GetFrameworks_Framework_Connected = []byte("connected")
+
+var ffj_key_Response_GetFrameworks_Framework_Recovered = []byte("recovered")
 
 var ffj_key_Response_GetFrameworks_Framework_RegisteredTime = []byte("registered_time")
 
@@ -10720,7 +10859,12 @@ mainparse:
 
 				case 'r':
 
-					if bytes.Equal(ffj_key_Response_GetFrameworks_Framework_RegisteredTime, kn) {
+					if bytes.Equal(ffj_key_Response_GetFrameworks_Framework_Recovered, kn) {
+						currentKey = ffj_t_Response_GetFrameworks_Framework_Recovered
+						state = fflib.FFParse_want_colon
+						goto mainparse
+
+					} else if bytes.Equal(ffj_key_Response_GetFrameworks_Framework_RegisteredTime, kn) {
 						currentKey = ffj_t_Response_GetFrameworks_Framework_RegisteredTime
 						state = fflib.FFParse_want_colon
 						goto mainparse
@@ -10783,6 +10927,12 @@ mainparse:
 					goto mainparse
 				}
 
+				if fflib.SimpleLetterEqualFold(ffj_key_Response_GetFrameworks_Framework_Recovered, kn) {
+					currentKey = ffj_t_Response_GetFrameworks_Framework_Recovered
+					state = fflib.FFParse_want_colon
+					goto mainparse
+				}
+
 				if fflib.SimpleLetterEqualFold(ffj_key_Response_GetFrameworks_Framework_Connected, kn) {
 					currentKey = ffj_t_Response_GetFrameworks_Framework_Connected
 					state = fflib.FFParse_want_colon
@@ -10826,6 +10976,9 @@ mainparse:
 
 				case ffj_t_Response_GetFrameworks_Framework_Connected:
 					goto handle_Connected
+
+				case ffj_t_Response_GetFrameworks_Framework_Recovered:
+					goto handle_Recovered
 
 				case ffj_t_Response_GetFrameworks_Framework_RegisteredTime:
 					goto handle_RegisteredTime
@@ -10964,6 +11117,47 @@ handle_Connected:
 			}
 
 			uj.Connected = &tval
+
+		}
+	}
+
+	state = fflib.FFParse_after_value
+	goto mainparse
+
+handle_Recovered:
+
+	/* handler: uj.Recovered type=bool kind=bool quoted=false*/
+
+	{
+		if tok != fflib.FFTok_bool && tok != fflib.FFTok_null {
+			return fs.WrapErr(fmt.Errorf("cannot unmarshal %s into Go value for bool", tok))
+		}
+	}
+
+	{
+		if tok == fflib.FFTok_null {
+
+			uj.Recovered = nil
+
+		} else {
+			tmpb := fs.Output.Bytes()
+
+			var tval bool
+
+			if bytes.Compare([]byte{'t', 'r', 'u', 'e'}, tmpb) == 0 {
+
+				tval = true
+
+			} else if bytes.Compare([]byte{'f', 'a', 'l', 's', 'e'}, tmpb) == 0 {
+
+				tval = false
+
+			} else {
+				err = errors.New("unexpected bytes for true/false value")
+				return fs.WrapErr(err)
+			}
+
+			uj.Recovered = &tval
 
 		}
 	}
@@ -13585,6 +13779,35 @@ func (mj *Response_GetTasks) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		}
 		buf.WriteByte(',')
 	}
+	if len(mj.UnreachableTasks) != 0 {
+		buf.WriteString(`"unreachable_tasks":`)
+		if mj.UnreachableTasks != nil {
+			buf.WriteString(`[`)
+			for i, v := range mj.UnreachableTasks {
+				if i != 0 {
+					buf.WriteString(`,`)
+				}
+
+				{
+
+					if v == nil {
+						buf.WriteString("null")
+						return nil
+					}
+
+					err = v.MarshalJSONBuf(buf)
+					if err != nil {
+						return err
+					}
+
+				}
+			}
+			buf.WriteString(`]`)
+		} else {
+			buf.WriteString(`null`)
+		}
+		buf.WriteByte(',')
+	}
 	if len(mj.CompletedTasks) != 0 {
 		buf.WriteString(`"completed_tasks":`)
 		if mj.CompletedTasks != nil {
@@ -13656,6 +13879,8 @@ const (
 
 	ffj_t_Response_GetTasks_Tasks
 
+	ffj_t_Response_GetTasks_UnreachableTasks
+
 	ffj_t_Response_GetTasks_CompletedTasks
 
 	ffj_t_Response_GetTasks_OrphanTasks
@@ -13664,6 +13889,8 @@ const (
 var ffj_key_Response_GetTasks_PendingTasks = []byte("pending_tasks")
 
 var ffj_key_Response_GetTasks_Tasks = []byte("tasks")
+
+var ffj_key_Response_GetTasks_UnreachableTasks = []byte("unreachable_tasks")
 
 var ffj_key_Response_GetTasks_CompletedTasks = []byte("completed_tasks")
 
@@ -13760,6 +13987,14 @@ mainparse:
 						goto mainparse
 					}
 
+				case 'u':
+
+					if bytes.Equal(ffj_key_Response_GetTasks_UnreachableTasks, kn) {
+						currentKey = ffj_t_Response_GetTasks_UnreachableTasks
+						state = fflib.FFParse_want_colon
+						goto mainparse
+					}
+
 				}
 
 				if fflib.EqualFoldRight(ffj_key_Response_GetTasks_OrphanTasks, kn) {
@@ -13770,6 +14005,12 @@ mainparse:
 
 				if fflib.EqualFoldRight(ffj_key_Response_GetTasks_CompletedTasks, kn) {
 					currentKey = ffj_t_Response_GetTasks_CompletedTasks
+					state = fflib.FFParse_want_colon
+					goto mainparse
+				}
+
+				if fflib.EqualFoldRight(ffj_key_Response_GetTasks_UnreachableTasks, kn) {
+					currentKey = ffj_t_Response_GetTasks_UnreachableTasks
 					state = fflib.FFParse_want_colon
 					goto mainparse
 				}
@@ -13808,6 +14049,9 @@ mainparse:
 
 				case ffj_t_Response_GetTasks_Tasks:
 					goto handle_Tasks
+
+				case ffj_t_Response_GetTasks_UnreachableTasks:
+					goto handle_UnreachableTasks
 
 				case ffj_t_Response_GetTasks_CompletedTasks:
 					goto handle_CompletedTasks
@@ -13970,6 +14214,81 @@ handle_Tasks:
 				}
 
 				uj.Tasks = append(uj.Tasks, tmp_uj__Tasks)
+
+				wantVal = false
+			}
+		}
+	}
+
+	state = fflib.FFParse_after_value
+	goto mainparse
+
+handle_UnreachableTasks:
+
+	/* handler: uj.UnreachableTasks type=[]*mesos.Task kind=slice quoted=false*/
+
+	{
+
+		{
+			if tok != fflib.FFTok_left_brace && tok != fflib.FFTok_null {
+				return fs.WrapErr(fmt.Errorf("cannot unmarshal %s into Go value for ", tok))
+			}
+		}
+
+		if tok == fflib.FFTok_null {
+			uj.UnreachableTasks = nil
+		} else {
+
+			uj.UnreachableTasks = []*mesos.Task{}
+
+			wantVal := true
+
+			for {
+
+				var tmp_uj__UnreachableTasks *mesos.Task
+
+				tok = fs.Scan()
+				if tok == fflib.FFTok_error {
+					goto tokerror
+				}
+				if tok == fflib.FFTok_right_brace {
+					break
+				}
+
+				if tok == fflib.FFTok_comma {
+					if wantVal == true {
+						// TODO(pquerna): this isn't an ideal error message, this handles
+						// things like [,,,] as an array value.
+						return fs.WrapErr(fmt.Errorf("wanted value token, but got token: %v", tok))
+					}
+					continue
+				} else {
+					wantVal = true
+				}
+
+				/* handler: tmp_uj__UnreachableTasks type=*mesos.Task kind=ptr quoted=false*/
+
+				{
+					if tok == fflib.FFTok_null {
+
+						tmp_uj__UnreachableTasks = nil
+
+						state = fflib.FFParse_after_value
+						goto mainparse
+					}
+
+					if tmp_uj__UnreachableTasks == nil {
+						tmp_uj__UnreachableTasks = new(mesos.Task)
+					}
+
+					err = tmp_uj__UnreachableTasks.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
+					if err != nil {
+						return err
+					}
+					state = fflib.FFParse_after_value
+				}
+
+				uj.UnreachableTasks = append(uj.UnreachableTasks, tmp_uj__UnreachableTasks)
 
 				wantVal = false
 			}

@@ -25,9 +25,9 @@ import proto "github.com/gogo/protobuf/proto"
 import math "math"
 
 // discarding unused import mesos "github.com/mesos/mesos-go"
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 // discarding unused import mesos_maintenance "github.com/mesos/mesos-go/maintenance"
 // discarding unused import mesos_quota "github.com/mesos/mesos-go/quota"
+// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
